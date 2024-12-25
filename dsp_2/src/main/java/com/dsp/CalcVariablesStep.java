@@ -22,19 +22,20 @@ import java.util.Map;
 import java.util.Set;
 
 
-public class WordCount {
+public class CalcVariablesStep {
 
     public static class MapperClass extends Mapper<LongWritable, Text, Text, IntWritable> {
         private Text word = new Text();
-        private final String delimiter = Naming_conventions.delimiter;
-        private static int c0 = 0;
-        private final static IntWritable count = new IntWritable(1);
+        private static String delimiter = Defs.delimiter;
+        // private static int c0 = 0; ###################################################
+        private final static IntWritable count = new IntWritable();
         private final Set<String> stopWords = new HashSet<>();
         private static final int MAX_MAP_SIZE = 1000;
+        private static int num;
 
 
     protected void setup(Context context) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader("../heb-stopwords.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(Defs.inputFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 stopWords.add(line.trim());
@@ -44,86 +45,77 @@ public class WordCount {
 
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        boolean localAggregationCommand = Naming_conventions.localAggregationCommand;
-        StringTokenizer itr = new StringTokenizer(value.toString());
-        
-        StringBuilder ngramBuilder = new StringBuilder();
+        boolean localAggregationCommand = Defs.localAggregationCommand;
         Map<String, Integer> localAggregation = new HashMap<>();
+        String[] parts = value.toString().split(Defs.TAB);
+        String[] words;
         
-        String[] window = new String[3];
-        int windowIndex = 0;
-        
-        while (itr.hasMoreTokens()) {
-            String token = itr.nextToken();
-            if (stopWords.stream().anyMatch(stopWord -> token.equals(stopWord))){ // || token.endsWith(stopWord))) {
-                continue;
-            }
-            
-            window[windowIndex % 3] = token;
-            windowIndex++;
-            
-            if (windowIndex >= 1) {
-                processNgram(window[(windowIndex - 1) % 3], null, null, 
-                            localAggregation, context, localAggregationCommand,
-                            ngramBuilder, word, count);
-            }
-            
-            if (windowIndex >= 2) {
-                processNgram(window[(windowIndex - 2) % 3], 
-                            window[(windowIndex - 1) % 3], null,
-                            localAggregation, context, localAggregationCommand,
-                            ngramBuilder, word, count);
-            }
-            
-            if (windowIndex >= 3) {
-                processNgram(window[(windowIndex - 3) % 3],
-                            window[(windowIndex - 2) % 3],
-                            window[(windowIndex - 1) % 3],
-                            localAggregation, context, localAggregationCommand,
-                            ngramBuilder, word, count);
-            }
-            
-            if (localAggregationCommand && localAggregation.size() >= MAX_MAP_SIZE) {
-                flushLocalAggregation(localAggregation, context, word, count);
-                localAggregation.clear();
-            }
+    
+        if (parts.length < 4) {
+            return;
         }
-        
-        if (localAggregationCommand && !localAggregation.isEmpty()) {
-            flushLocalAggregation(localAggregation, context, word, count);
+
+        words = parts[0].toString().split(Defs.SPACE);
+
+        if (words.length < 3) {
+            return;
         }
-        
-        word.set("c0");
-        count.set(c0);
-        context.write(word, count);
+
+        String w1 = words[0];
+        String w2 = words[1];
+        String w3 = words[2];
+
+        try {
+            num = Integer.parseInt(parts[2]); // Frequency count of the trigram
+        } catch (NumberFormatException e) {
+            // Skip lines with invalid count
+            return;
+        }
+
+        if (stopWords.contains(w1) || stopWords.contains(w2) || stopWords.contains(w3)){
+            return;
+        }
+
+        // countOccurrence("c0", localAggregation, context, localAggregationCommand, 3*num);
+
+        countOccurrence(w1, localAggregation, context, localAggregationCommand, num);
+
+        countOccurrence(w2, localAggregation, context, localAggregationCommand, num);
+
+        countOccurrence(w3, localAggregation, context, localAggregationCommand, num);
+
+        countOccurrence(w1 + delimiter + w2, localAggregation, context, localAggregationCommand, num);
+
+        countOccurrence(w2 + delimiter + w3, localAggregation, context, localAggregationCommand, num);
+
+        countOccurrence(w1 + delimiter + w2 + delimiter + w3, localAggregation, context, localAggregationCommand, num);
+
+    
+        if (localAggregationCommand && localAggregation.size() >= MAX_MAP_SIZE) {
+            flushLocalAggregation(localAggregation, context);
+            localAggregation.clear();
+        }
+
     }
     
-    private void processNgram(String w1, String w2, String w3, Map<String, Integer> localAggregation, Context context, boolean localAggregationCommand, StringBuilder builder, Text word, IntWritable one) throws IOException, InterruptedException {
-        builder.setLength(0);
-        builder.append(w1);
-        if (w2 != null) {
-            builder.append(delimiter).append(w2);
-        }
-        if (w3 != null) {
-            builder.append(delimiter).append(w3);
-        }
-        
-        String ngram = builder.toString();
+    private void countOccurrence(String key, Map<String, Integer> localAggregation, Context context, boolean localAggregationCommand, Integer num) throws IOException, InterruptedException {
         if (localAggregationCommand) {
-            localAggregation.put(ngram, localAggregation.getOrDefault(ngram, 0) + 1);
+            localAggregation.put(key, localAggregation.getOrDefault(key, 0) + num);
         } else {
-            word.set(ngram);
-            one.set(1);
-            context.write(word, one);
+            word.set(key);
+            count.set(num);
+            context.write(word, count);
         }
-        c0++;
     }
-
-    private void flushLocalAggregation(Map<String, Integer> localAggregation, Context context, Text word, IntWritable count) throws IOException, InterruptedException {
+    
+    private void flushLocalAggregation(Map<String, Integer> localAggregation, Context context) throws IOException, InterruptedException {
+        Text word = new Text();
+        IntWritable countWritable = new IntWritable();
+    
         for (Map.Entry<String, Integer> entry : localAggregation.entrySet()) {
             word.set(entry.getKey());
-            count.set(entry.getValue());
-            context.write(word, count);
+            countWritable.set(entry.getValue());
+            context.write(word, countWritable);
         }
     }
 
@@ -142,6 +134,13 @@ public class WordCount {
                     context.setStatus("Warning: Sum overflow for key: " + key.toString());
                     sum = Integer.MAX_VALUE;
                 }
+
+                int numOfWords = key.toString().split(delimiter).length;
+
+                if (numOfWords == 1)
+                    sum = sum/3;
+                if (numOfWords == 2)
+                    sum = sum/2;
                 
                 result.set((int)sum);
                 context.write(key, result);
@@ -165,7 +164,7 @@ public class WordCount {
         System.out.println(args.length > 0 ? args[0] : "no args");
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, "Word Count");
-        job.setJarByClass(WordCount.class);
+        job.setJarByClass(CalcVariablesStep.class);
         job.setMapperClass(MapperClass.class);
         job.setPartitionerClass(PartitionerClass.class);
         job.setCombinerClass(ReducerClass.class);
