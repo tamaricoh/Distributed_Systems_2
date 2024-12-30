@@ -29,31 +29,31 @@ public class sequenceProcessingStep {
             context.write(outputKey, outputValue);
             
             // Generate keys for sub-sequences based on the pattern
-            if (!words[1].equals("*")) {
+            if (!words[1].equals(Defs.astrix)) {
                 // Output for w1-w2 pair
-                outputKey.set(words[0] + " " + words[1] + " *");
+                outputKey.set(words[0] + Defs.delimiter + words[1] + Defs.delimiter + Defs.astrix);
                 outputValue.set("PAIR12:" + count);
                 context.write(outputKey, outputValue);
                 
-                if (!words[2].equals("*")) {
+                if (!words[2].equals(Defs.astrix)) {
                     // Output for w2-w3 pair
-                    outputKey.set("* " + words[1] + " " + words[2]);
+                    outputKey.set(Defs.astrix + Defs.delimiter + words[1] + Defs.delimiter + words[2]);
                     outputValue.set("PAIR23:" + count);
                     context.write(outputKey, outputValue);
                     
                     // Individual words
-                    outputKey.set("* " + words[1] + " *");
+                    outputKey.set(Defs.astrix + Defs.delimiter + words[1] + Defs.delimiter + Defs.astrix);
                     outputValue.set("SINGLE2:" + count);
                     context.write(outputKey, outputValue);
                     
-                    outputKey.set("* * " + words[2]);
+                    outputKey.set(Defs.astrix + Defs.delimiter + Defs.astrix + Defs.delimiter + words[2]);
                     outputValue.set("SINGLE3:" + count);
                     context.write(outputKey, outputValue);
                 }
             }
             
             // For C0 calculation
-            if (words[1].equals("*") && words[2].equals("*")) {
+            if (words[1].equals(Defs.astrix) && words[2].equals(Defs.astrix)) {
                 outputKey.set("TOTAL_C0");
                 outputValue.set("C0:" + count);
                 context.write(outputKey, outputValue);
@@ -117,7 +117,7 @@ public class sequenceProcessingStep {
             
             // Only output for full sequences (no asterisks)
             String[] keyParts = key.toString().split("\\s+");
-            if (!keyParts[0].equals("*") && !keyParts[1].equals("*") && !keyParts[2].equals("*")) {
+            if (!keyParts[0].equals(Defs.astrix) && !keyParts[1].equals(Defs.astrix) && !keyParts[2].equals(Defs.astrix)) {
                 String output = String.format("%d,%d,%d,%d,%d,%d", 
                     fullCount, pair12Count, pair23Count, word2Count, word3Count, C0);
                 context.write(key, new Text(output));
