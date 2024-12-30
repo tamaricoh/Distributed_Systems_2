@@ -31,7 +31,6 @@ public class CalcVariablesStep {
 
     public static class MapperClass extends Mapper<LongWritable, Text, Text, IntWritable> {
         private Text word = new Text();
-        // private static int c0 = 0; ###################################################
         private final static IntWritable count = new IntWritable();
         private final Set<String> stopWords = new HashSet<>();
         private static final int MAX_MAP_SIZE = 1000;

@@ -3,7 +3,6 @@ package com.dsp;
 import java.util.ArrayList;
 import java.util.List;
 
-// import software.amazon.awssdk.services.ec2.model.InstanceType;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClientBuilder;
 import com.amazonaws.services.elasticmapreduce.model.*;
@@ -12,18 +11,8 @@ import com.amazonaws.services.elasticmapreduce.model.*;
 public class AWS_Hadoop_setup { 
     
     public static void main(String[] args) {
-        if (args == null || args.length != 2) {
-            System.out.println("ERROR! Invalid input usage: java CollocationExtraction <minPmi> <relMinPmi>");
-            System.exit(1);
-        }
-
-        // Defs.minNpmi = args[0];
-        // Defs.relMinNpmi = args[1];
-
-        //BasicConfigurator.configure(); // Add a ConsoleAppender that uses PatternLayout using the PatternLayout.TTCC_CONVERSION_PATTERN and prints to System.out to the root category.
         AmazonElasticMapReduce mapReduce = AmazonElasticMapReduceClientBuilder.standard().withRegion(Defs.regions).build();
-        //System.out.println(mapReduce.listClusters());
-
+        
         List<HadoopJarStepConfig> hadoopJarStepConfigs = new ArrayList<HadoopJarStepConfig>();
         for(int i = 0 ; i < Defs.Steps_Names.length ; i++) { 
             hadoopJarStepConfigs.add(new HadoopJarStepConfig()
