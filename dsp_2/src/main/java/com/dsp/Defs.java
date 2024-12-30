@@ -3,7 +3,7 @@ package com.dsp;
 import com.amazonaws.regions.Regions;
 
 public class Defs {
-    public static String inputFile = "../heb-stopwords.txt";
+    public static String stopWordsFile = "../heb-stopwords.txt";
 
     public static boolean localAggregationCommand = true;
 
