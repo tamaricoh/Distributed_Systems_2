@@ -9,8 +9,11 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+// import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -36,7 +39,7 @@ public class CalcVariablesStep {
 
 
     protected void setup(Context context) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader(Defs.inputFile))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(Defs.stopWordsFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 stopWords.add(line.trim());
@@ -159,8 +162,8 @@ public class CalcVariablesStep {
         public int getPartition(Text key, IntWritable value, int numPartitions) {
             int numAsterisks = StringUtils.countMatches(key.toString(), Defs.astrix);
             int numWords = 3 - (numAsterisks % 3);
-            return numWords % numPartitions;
-            // (numWords + key.hashCode()) % numPartitions
+            // return numWords % numPartitions;
+            return (numWords + key.hashCode()) % numPartitions;
         }
     }
 
@@ -168,7 +171,7 @@ public class CalcVariablesStep {
         System.out.println("[DEBUG] STEP 1 started!");
         System.out.println(args.length > 0 ? args[0] : "no args");
         Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, "Word Count");
+        Job job = Job.getInstance(conf, "Calc variables step");
         job.setJarByClass(CalcVariablesStep.class);
         job.setMapperClass(MapperClass.class);
         job.setPartitionerClass(PartitionerClass.class);
@@ -179,13 +182,11 @@ public class CalcVariablesStep {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
 
-//        For n_grams S3 files.
-//        Note: This is English version and you should change the path to the relevant one
-//        job.setOutputFormatClass(TextOutputFormat.class);
-//        job.setInputFormatClass(SequenceFileInputFormat.class);
-//        TextInputFormat.addInputPath(job, new Path("s3://datasets.elasticmapreduce/ngrams/books/20090715/eng-us-all/3gram/data"));
-
-        FileInputFormat.addInputPath(job, new Path("s3://bucket163897429777/arbix.txt"));
+        // For n_grams S3 files.
+        // Note: This is English version and you should change the path to the relevant one
+        job.setOutputFormatClass(TextOutputFormat.class);
+        job.setInputFormatClass(SequenceFileInputFormat.class);
+        TextInputFormat.addInputPath(job, new Path(Defs.HEB_3Gram_path));
         FileOutputFormat.setOutputPath(job, new Path("s3://bucket163897429777/output_word_count"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
