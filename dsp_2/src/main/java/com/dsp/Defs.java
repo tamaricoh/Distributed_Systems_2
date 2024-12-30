@@ -6,8 +6,9 @@ public class Defs {
     public static String inputFile = "../heb-stopwords.txt";
 
     public static boolean localAggregationCommand = true;
-    public static String delimiter = "$$";
 
+    public static final String delimiter = "$$";
+    public static final String astrix = "*";
     public static final String TAB = "\t";
     public static final String SPACE = " "; // '\0'
 
@@ -23,8 +24,8 @@ public class Defs {
 
     public static final String TERMINATE_JOB_FLOW_MESSAGE = "TERMINATE_JOB_FLOW";
 
-    public static final String PROJECT_NAME = "collocations-extraction";
-    public static final String JAR_NAME = "CollocationsExtractionJar";
+    public static final String PROJECT_NAME = "WordPrediction";
+    public static final String JAR_NAME = "WordPredictionJar";
     public static final String JAR_PATH = "s3://" + PROJECT_NAME + "/" + JAR_NAME + ".jar";
     public static final String Logs_URI = "s3://" + PROJECT_NAME + "/logs";
 
@@ -33,8 +34,8 @@ public class Defs {
     public static final String[] Steps_Names = {"step1"};
     public static final String[] Step_Output_Name = {};
 
-    public static String minNpmi = "1"; 
-    public static String relMinNpmi = "1";
+    // public static String minNpmi = "1"; 
+    // public static String relMinNpmi = "1";
 
     public static String getStepJarPath(int i){
         return "s3://" + PROJECT_NAME + "/" + Steps_Names[i] + ".jar";
@@ -71,8 +72,6 @@ public class Defs {
                 args = new String[]{
                     "s3://" + PROJECT_NAME + "/" + Step_Output_Name[3] + "/", // input
                     "s3://" + PROJECT_NAME + "/" + Step_Output_Name[4], // output
-                    minNpmi,
-                    relMinNpmi
                 };
                 break;
             default:

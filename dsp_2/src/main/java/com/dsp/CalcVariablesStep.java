@@ -12,10 +12,12 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.StringTokenizer;
+// import java.util.StringTokenizer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -26,7 +28,6 @@ public class CalcVariablesStep {
 
     public static class MapperClass extends Mapper<LongWritable, Text, Text, IntWritable> {
         private Text word = new Text();
-        private static String delimiter = Defs.delimiter;
         // private static int c0 = 0; ###################################################
         private final static IntWritable count = new IntWritable();
         private final Set<String> stopWords = new HashSet<>();
@@ -78,20 +79,21 @@ public class CalcVariablesStep {
 
         // countOccurrence("c0", localAggregation, context, localAggregationCommand, 3*num);
 
-        countOccurrence(w1, localAggregation, context, localAggregationCommand, num);
+        countOccurrence(w1 + Defs.delimiter + Defs.astrix + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
 
-        countOccurrence(w2, localAggregation, context, localAggregationCommand, num);
+        countOccurrence(w2 + Defs.delimiter + Defs.astrix + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
 
-        countOccurrence(w3, localAggregation, context, localAggregationCommand, num);
+        countOccurrence(w3 + Defs.delimiter + Defs.astrix + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
 
-        countOccurrence(w1 + delimiter + w2, localAggregation, context, localAggregationCommand, num);
+        countOccurrence(w1 + Defs.delimiter + w2 + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
 
-        countOccurrence(w2 + delimiter + w3, localAggregation, context, localAggregationCommand, num);
+        countOccurrence(w2 + Defs.delimiter + w3 + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
 
-        countOccurrence(w1 + delimiter + w2 + delimiter + w3, localAggregation, context, localAggregationCommand, num);
+        countOccurrence(w1 + Defs.delimiter + w2 + Defs.delimiter + w3, localAggregation, context, localAggregationCommand, num);
 
     
         if (localAggregationCommand && localAggregation.size() >= MAX_MAP_SIZE) {
+            context.setStatus("[DEBUG] Flushing local aggregation due to memory limit.");
             flushLocalAggregation(localAggregation, context);
             localAggregation.clear();
         }
@@ -109,13 +111,10 @@ public class CalcVariablesStep {
     }
     
     private void flushLocalAggregation(Map<String, Integer> localAggregation, Context context) throws IOException, InterruptedException {
-        Text word = new Text();
-        IntWritable countWritable = new IntWritable();
-    
         for (Map.Entry<String, Integer> entry : localAggregation.entrySet()) {
             word.set(entry.getKey());
-            countWritable.set(entry.getValue());
-            context.write(word, countWritable);
+            count.set(entry.getValue());
+            context.write(word, count);
         }
     }
 
@@ -125,6 +124,7 @@ public class CalcVariablesStep {
         @Override
         public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException,  InterruptedException {
             long sum = 0;
+
             try {
                 for (IntWritable value : values) {
                     sum += value.get();
@@ -135,12 +135,14 @@ public class CalcVariablesStep {
                     sum = Integer.MAX_VALUE;
                 }
 
-                int numOfWords = key.toString().split(delimiter).length;
-
-                if (numOfWords == 1)
-                    sum = sum/3;
-                if (numOfWords == 2)
-                    sum = sum/2;
+                int numAsterisks = StringUtils.countMatches(key.toString(), Defs.astrix);
+                int numWords = 3 - (numAsterisks % 3);
+                
+                if (numWords == 1) {  // w1**
+                    sum = sum / 3;
+                } else if (numWords == 2) {  // w1w2*
+                    sum = sum / 2;
+                }
                 
                 result.set((int)sum);
                 context.write(key, result);
@@ -155,7 +157,10 @@ public class CalcVariablesStep {
     public static class PartitionerClass extends Partitioner<Text, IntWritable> {
         @Override
         public int getPartition(Text key, IntWritable value, int numPartitions) {
-            return key.hashCode() % numPartitions;
+            int numAsterisks = StringUtils.countMatches(key.toString(), Defs.astrix);
+            int numWords = 3 - (numAsterisks % 3);
+            return numWords % numPartitions;
+            // (numWords + key.hashCode()) % numPartitions
         }
     }
 
