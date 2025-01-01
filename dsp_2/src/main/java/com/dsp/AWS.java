@@ -19,7 +19,7 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 import software.amazon.awssdk.services.sqs.model.SqsException;
 
-import java.nio.file.Paths;
+// import java.nio.file.Paths;
 
 import software.amazon.awssdk.regions.Region;
 
