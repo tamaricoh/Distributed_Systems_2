@@ -8,6 +8,7 @@ public class Defs {
     public static boolean localAggregationCommand = true;
 
     public static final String delimiter = "$$";
+    public static final String seperator = "%%";
     public static final String astrix = "*";
     public static final String TAB = "\t";
     public static final String SPACE = " "; // '\0'
@@ -28,10 +29,11 @@ public class Defs {
     public static final String JAR_NAME = "WordPredictionJar";
     public static final String JAR_PATH = "s3://" + PROJECT_NAME + "/" + JAR_NAME + ".jar";
     public static final String Logs_URI = "s3://" + PROJECT_NAME + "/logs";
+    public static final String C0_SQS = "C0-sqs";
 
     public static final String HEB_3Gram_path = "s3://datasets.elasticmapreduce/ngrams/books/20090715/heb-all/3gram/data";
 
-    public static final String[] Steps_Names = {"step1"};
+    public static final String[] Steps_Names = {"CalcVariablesStep", "valuesJoinerStep", "probabilityCalcStep"};
     public static final String[] Step_Output_Name = {};
 
     // public static String minNpmi = "1"; 
@@ -45,6 +47,7 @@ public class Defs {
         switch (stepNum){
             case 0:
                 args = new String[]{ 
+                    HEB_3Gram_path,
                     "s3://" + PROJECT_NAME + "/" + Step_Output_Name[0] 
                 };
                 break;
@@ -56,22 +59,8 @@ public class Defs {
                 break;
             case 2:
                 args = new String[]{
-                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[0] + "/", // input
-                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[2] // output
-                };
-                break;
-            case 3:
-                args = new String[]{
-                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[0] + "/", // input
                     "s3://" + PROJECT_NAME + "/" + Step_Output_Name[1] + "/", // input
-                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[2] + "/", // input
-                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[3] // output
-                };
-                break;
-            case 4:
-                args = new String[]{
-                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[3] + "/", // input
-                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[4], // output
+                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[2] // output
                 };
                 break;
             default:

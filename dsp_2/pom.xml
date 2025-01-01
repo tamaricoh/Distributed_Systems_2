@@ -7,10 +7,6 @@
   <artifactId>dsp_2</artifactId>
   <version>1.0-SNAPSHOT</version>
 
-  <name>dsp_2</name>
-  <!-- FIXME change it to the project's website -->
-  <url>http://www.example.com</url>
-
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>8</maven.compiler.release>
@@ -59,6 +55,12 @@
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>s3</artifactId>
       <version>2.28.18</version>
+    </dependency>
+
+    <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>sqs</artifactId>
+        <version>2.20.10</version>
     </dependency>
 
     <dependency>
@@ -134,6 +136,13 @@
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.4.2</version>
+          <configuration>
+            <archive>
+              <manifestEntries>
+                <Main-Class>com.dsp.AWS_Hadoop_setup</Main-Class> <!-- Replace this with your main class -->
+              </manifestEntries>
+            </archive>
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-install-plugin</artifactId>

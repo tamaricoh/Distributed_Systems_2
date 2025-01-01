@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+// import java.util.TreeMap;
 
 
 public class CalcVariablesStep {
@@ -79,7 +80,7 @@ public class CalcVariablesStep {
             return;
         }
 
-        // countOccurrence("c0", localAggregation, context, localAggregationCommand, 3*num);
+        countOccurrence("c0" + Defs.astrix + Defs.astrix, localAggregation, context, localAggregationCommand, 3*num);
 
         countOccurrence(w1 + Defs.delimiter + Defs.astrix + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
 
@@ -122,32 +123,46 @@ public class CalcVariablesStep {
 
     public static class ReducerClass extends Reducer<Text,IntWritable,Text,IntWritable> {
         private IntWritable result = new IntWritable();
+        static AWS aws = AWS.getInstance();
+
 
         @Override
-        public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException,  InterruptedException {
+        public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
             long sum = 0;
 
             try {
+                // Calculate sum of values
                 for (IntWritable value : values) {
                     sum += value.get();
                 }
-                
-                if (sum > Integer.MAX_VALUE) { // if key is long
+
+                if (sum > Integer.MAX_VALUE) {
+                    // Prevent overflow, warn and cap the sum at Integer.MAX_VALUE
                     context.setStatus("Warning: Sum overflow for key: " + key.toString());
                     sum = Integer.MAX_VALUE;
                 }
 
+                // Calculate the number of words based on asterisks in the key
                 int numAsterisks = StringUtils.countMatches(key.toString(), Defs.astrix);
                 int numWords = 3 - (numAsterisks % 3);
-                
+
+                // Adjust sum based on the number of words
                 if (numWords == 1) {  // w1**
                     sum = sum / 3;
                 } else if (numWords == 2) {  // w1w2*
                     sum = sum / 2;
                 }
+
+                if(key.toString().equals("c0" + Defs.astrix + Defs.astrix)){
+                    aws.createSqsQueue(Defs.C0_SQS);
+                    aws.sendSQSMessage(Defs.C0_SQS, String.valueOf((int)sum));
+                }
+                else {
+                    result.set((int) sum);
+                    context.write(key, result);
+                }
+
                 
-                result.set((int)sum);
-                context.write(key, result);
                 
             } catch (Exception e) {
                 // Log error and continue with next key
