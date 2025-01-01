@@ -9,8 +9,16 @@ import com.amazonaws.services.elasticmapreduce.model.*;
 
 
 public class AWS_Hadoop_setup { 
+    static AWS aws = AWS.getInstance();
     
     public static void main(String[] args) {
+
+        aws.createBucketIfNotExists(Defs.PROJECT_NAME);
+        aws.uploadFileToS3("C:/Users/tamar/Desktop/B.Sc/Semester G/AWS/Assignment_2/dsp_2/src/main/resources/heb-stopwords.txt", Defs.PROJECT_NAME); // StopWords
+        for(int i = 0 ; i < Defs.Steps_Names.length ; i++){
+            aws.uploadFileToS3(Defs.Steps_Names[i] + ".jar", Defs.PROJECT_NAME); // steps jar //TODO
+        }
+
         AmazonElasticMapReduce mapReduce = AmazonElasticMapReduceClientBuilder.standard().withRegion(Defs.regions).build();
         
         List<HadoopJarStepConfig> hadoopJarStepConfigs = new ArrayList<HadoopJarStepConfig>();
