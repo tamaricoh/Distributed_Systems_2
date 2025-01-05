@@ -3,15 +3,16 @@ package com.dsp;
 import com.amazonaws.regions.Regions;
 
 public class Defs {
-    public static String stopWordsFile = "../resources/heb-stopwords.txt";
-
+    public static String stopWordsFile = "/home/yarden/Distributed_Systems_2/dsp_2/src/main/resources/heb-stopwords.txt";
+    public static String logsFile = "/home/yarden/Distributed_Systems_2/dsp_2/src/main/resources/logs.txt";
+    public static String jarPath = "/home/yarden/Distributed_Systems_2/dsp_2/target/";
     public static boolean localAggregationCommand = true;
 
     public static final String delimiter = "$$";
     public static final String seperator = "%%";
     public static final String astrix = "*";
     public static final String TAB = "\t";
-    public static final String SPACE = " "; // '\0'
+    public static final String SPACE = " ";
 
     public enum ValueType {}
 
@@ -25,7 +26,7 @@ public class Defs {
 
     public static final String TERMINATE_JOB_FLOW_MESSAGE = "TERMINATE_JOB_FLOW";
 
-    public static final String PROJECT_NAME = "WordPrediction";
+    public static final String PROJECT_NAME = "word-prediction";
     public static final String JAR_NAME = "WordPredictionJar";
     public static final String JAR_PATH = "s3://" + PROJECT_NAME + "/" + JAR_NAME + ".jar";
     public static final String Logs_URI = "s3://" + PROJECT_NAME + "/logs";
@@ -34,22 +35,21 @@ public class Defs {
     public static final String HEB_3Gram_path = "s3://datasets.elasticmapreduce/ngrams/books/20090715/heb-all/3gram/data";
 
     public static final String[] Steps_Names = {"CalcVariablesStep", "valuesJoinerStep", "probabilityCalcStep"};
-    public static final String[] Step_Output_Name = {};
-
-    // public static String minNpmi = "1"; 
-    // public static String relMinNpmi = "1";
+    public static final String[] Step_Output_Name = {"word-sequences", "triple-sequences", "word-sequence-probabillity"};
 
     public static String getStepJarPath(int i){
         return "s3://" + PROJECT_NAME + "/" + Steps_Names[i] + ".jar";
     }
     public static String[] getStepArgs(int stepNum){
         String[] args;
+        System.out.println("[DEBUG]  step number: " + stepNum);
         switch (stepNum){
             case 0:
                 args = new String[]{ 
                     HEB_3Gram_path,
                     "s3://" + PROJECT_NAME + "/" + Step_Output_Name[0] 
                 };
+                System.out.println("[DEBUG]  step output name: " + Step_Output_Name[0]);
                 break;
             case 1:
                 args = new String[]{

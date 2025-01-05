@@ -10,7 +10,7 @@
         <fileSet>
             <directory>${project.build.outputDirectory}</directory>
             <includes>
-                <include>com/dsp/sequenceProcessingStep.class</include>
+                <include>com/dsp/valuesJoinerStep.class</include>
                 <include>com/dsp/Defs.class</include>
                 <include>com/dsp/AWS.class</include>
             </includes>
