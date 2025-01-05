@@ -15,8 +15,9 @@ public class AWS_Hadoop_setup {
 
         aws.createBucketIfNotExists(Defs.PROJECT_NAME);
         aws.uploadFileToS3(Defs.stopWordsFile, Defs.PROJECT_NAME); // StopWords
+        aws.uploadFileToS3(Defs.logsFile, Defs.PROJECT_NAME); // StopWords
         for(int i = 0 ; i < Defs.Steps_Names.length ; i++){
-            aws.uploadFileToS3(Defs.Steps_Names[i] + ".jar", Defs.PROJECT_NAME); // steps jar //TODO
+            aws.uploadFileToS3(Defs.jarPath + Defs.Steps_Names[i] + ".jar", Defs.PROJECT_NAME); //Upload Jars
         }
 
         AmazonElasticMapReduce mapReduce = AmazonElasticMapReduceClientBuilder.standard().withRegion(Defs.regions).build();

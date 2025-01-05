@@ -27,7 +27,7 @@ import software.amazon.awssdk.regions.Region;
 public class AWS {
     private final SqsClient sqs;
     private final S3Client s3;
-    public static Region region = Region.US_EAST_1;
+    public static Region region = Region.US_WEST_2;
     private static final AWS instance = new AWS();
 
     private AWS() {
