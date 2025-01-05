@@ -36,9 +36,6 @@ public class Defs {
     public static final String[] Steps_Names = {"CalcVariablesStep", "valuesJoinerStep", "probabilityCalcStep"};
     public static final String[] Step_Output_Name = {};
 
-    // public static String minNpmi = "1"; 
-    // public static String relMinNpmi = "1";
-
     public static String getStepJarPath(int i){
         return "s3://" + PROJECT_NAME + "/" + Steps_Names[i] + ".jar";
     }
