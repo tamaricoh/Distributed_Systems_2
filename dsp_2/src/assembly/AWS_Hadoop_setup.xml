@@ -11,6 +11,10 @@
             <directory>${project.build.outputDirectory}</directory>
             <includes>
                 <include>com/dsp/AWS_Hadoop_setup.class</include>
+                <include>com/dsp/Calc.class</include>
+                <include>com/dsp/CalcVariablesStep.class</include>
+                <include>com/dsp/probabilityCalcStep.class</include>
+                <include>com/dsp/valuesJoinerStep.class</include>
                 <include>com/dsp/Defs.class</include>
                 <include>com/dsp/AWS.class</include>
             </includes>

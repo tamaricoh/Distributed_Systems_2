@@ -199,7 +199,8 @@ public class CalcVariablesStep {
         // For n_grams S3 files.
         // Note: This is English version and you should change the path to the relevant one
         job.setOutputFormatClass(TextOutputFormat.class);
-        job.setInputFormatClass(SequenceFileInputFormat.class);
+        //return to sequence when calculating on 3grams
+        job.setInputFormatClass(TextInputFormat.class);/////SequenceFileInputFormat.class);
         TextInputFormat.addInputPath(job, new Path(Defs.HEB_3Gram_path));
         FileOutputFormat.setOutputPath(job, new Path("s3://bucket163897429777/output_word_count"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
