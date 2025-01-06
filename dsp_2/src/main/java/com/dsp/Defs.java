@@ -21,7 +21,7 @@ public class Defs {
     public static Region region2 = Region.US_WEST_2;
     public static String placementRegion = "us-east-1a"; 
 
-    public static final int instanceCount = 4;
+    public static final int instanceCount = 2;
 
     public static final String HADOOP_VER = "3.3.6";
     public static final String KEY_NAME_SSH = "vockey";
@@ -29,18 +29,20 @@ public class Defs {
     public static final String TERMINATE_JOB_FLOW_MESSAGE = "TERMINATE_JOB_FLOW";
 
     public static final String PROJECT_NAME = "word-prediction";
-    public static final String JAR_NAME = "aws-hadoop-setup";
-    public static final String JAR_PATH = "s3://" + PROJECT_NAME + "/" + JAR_NAME + ".jar";
     public static final String Logs_URI = "s3://" + PROJECT_NAME + "/logs";
     public static final String C0_SQS = "C0-sqs";
 
     public static final String HEB_3Gram_path = "s3://datasets.elasticmapreduce/ngrams/books/20090715/heb-all/3gram/data";
-    public static final String S3_BUCKET_PATH = "s3://your-bucket-name.s3.us-west-2.amazonaws.com/";
+    public static final String S3_BUCKET_PATH = "s3://" + PROJECT_NAME + "/";
+    public static final String PATH_TO_TARGET = "/home/yarden/Distributed_Systems_2/dsp_2/target/";
     public static final String[] Steps_Names = {"CalcVariablesStep", "valuesJoinerStep", "probabilityCalcStep"};
     public static final String[] Step_Output_Name = {"word-sequences", "triple-sequences", "word-sequence-probabillity"};
 
     public static String getStepJarPath(int i){
-        return "s3://" + PROJECT_NAME + "/" + Steps_Names[i] + ".jar";
+        return  getPathS3(Steps_Names[i], ".jar");
+    }
+    public static String getPathS3(String file_name, String file_format){
+        return "s3://" + PROJECT_NAME + "/" + file_name + file_format;
     }
     public static String[] getStepArgs(int stepNum){
         String[] args;
