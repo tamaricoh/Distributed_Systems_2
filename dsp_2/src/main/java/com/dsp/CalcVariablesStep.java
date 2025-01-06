@@ -38,89 +38,88 @@ public class CalcVariablesStep {
         private static int num;
 
 
-    protected void setup(Context context) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader(Defs.stopWordsFile))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                stopWords.add(line.trim());
+        protected void setup(Context context) throws IOException {
+            try (BufferedReader reader = new BufferedReader(new FileReader(Defs.stopWordsFile))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    stopWords.add(line.trim());
+                }
+            }
+        }
+
+        @Override
+        public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+            boolean localAggregationCommand = Defs.localAggregationCommand;
+            Map<String, Integer> localAggregation = new HashMap<>();
+            String[] parts = value.toString().split(Defs.TAB);
+            String[] words;
+            
+        
+            if (parts.length < 4) {
+                return;
+            }
+
+            words = parts[0].toString().split(Defs.SPACE);
+
+            if (words.length < 3) {
+                return;
+            }
+
+            String w1 = words[0];
+            String w2 = words[1];
+            String w3 = words[2];
+
+            try {
+                num = Integer.parseInt(parts[2]); // Frequency count of the trigram
+            } catch (NumberFormatException e) {
+                // Skip lines with invalid count
+                return;
+            }
+
+            if (stopWords.contains(w1) || stopWords.contains(w2) || stopWords.contains(w3)){
+                return;
+            }
+
+            countOccurrence("c0" + Defs.astrix + Defs.astrix, localAggregation, context, localAggregationCommand, 3*num);
+
+            countOccurrence(w1 + Defs.delimiter + Defs.astrix + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
+
+            countOccurrence(w2 + Defs.delimiter + Defs.astrix + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
+
+            countOccurrence(w3 + Defs.delimiter + Defs.astrix + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
+
+            countOccurrence(w1 + Defs.delimiter + w2 + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
+
+            countOccurrence(w2 + Defs.delimiter + w3 + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
+
+            countOccurrence(w1 + Defs.delimiter + w2 + Defs.delimiter + w3, localAggregation, context, localAggregationCommand, num);
+
+        
+            if (localAggregationCommand && localAggregation.size() >= MAX_MAP_SIZE) {
+                context.setStatus("[DEBUG] Flushing local aggregation due to memory limit.");
+                flushLocalAggregation(localAggregation, context);
+                localAggregation.clear();
+            }
+        }
+    
+        private void countOccurrence(String key, Map<String, Integer> localAggregation, Context context, boolean localAggregationCommand, Integer num) throws IOException, InterruptedException {
+            if (localAggregationCommand) {
+                localAggregation.put(key, localAggregation.getOrDefault(key, 0) + num);
+            } else {
+                word.set(key);
+                count.set(num);
+                context.write(word, count);
+            }
+        }
+        
+        private void flushLocalAggregation(Map<String, Integer> localAggregation, Context context) throws IOException, InterruptedException {
+            for (Map.Entry<String, Integer> entry : localAggregation.entrySet()) {
+                word.set(entry.getKey());
+                count.set(entry.getValue());
+                context.write(word, count);
             }
         }
     }
-
-    @Override
-    public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        boolean localAggregationCommand = Defs.localAggregationCommand;
-        Map<String, Integer> localAggregation = new HashMap<>();
-        String[] parts = value.toString().split(Defs.TAB);
-        String[] words;
-        
-    
-        if (parts.length < 4) {
-            return;
-        }
-
-        words = parts[0].toString().split(Defs.SPACE);
-
-        if (words.length < 3) {
-            return;
-        }
-
-        String w1 = words[0];
-        String w2 = words[1];
-        String w3 = words[2];
-
-        try {
-            num = Integer.parseInt(parts[2]); // Frequency count of the trigram
-        } catch (NumberFormatException e) {
-            // Skip lines with invalid count
-            return;
-        }
-
-        if (stopWords.contains(w1) || stopWords.contains(w2) || stopWords.contains(w3)){
-            return;
-        }
-
-        countOccurrence("c0" + Defs.astrix + Defs.astrix, localAggregation, context, localAggregationCommand, 3*num);
-
-        countOccurrence(w1 + Defs.delimiter + Defs.astrix + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
-
-        countOccurrence(w2 + Defs.delimiter + Defs.astrix + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
-
-        countOccurrence(w3 + Defs.delimiter + Defs.astrix + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
-
-        countOccurrence(w1 + Defs.delimiter + w2 + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
-
-        countOccurrence(w2 + Defs.delimiter + w3 + Defs.delimiter + Defs.astrix, localAggregation, context, localAggregationCommand, num);
-
-        countOccurrence(w1 + Defs.delimiter + w2 + Defs.delimiter + w3, localAggregation, context, localAggregationCommand, num);
-
-    
-        if (localAggregationCommand && localAggregation.size() >= MAX_MAP_SIZE) {
-            context.setStatus("[DEBUG] Flushing local aggregation due to memory limit.");
-            flushLocalAggregation(localAggregation, context);
-            localAggregation.clear();
-        }
-
-    }
-    
-    private void countOccurrence(String key, Map<String, Integer> localAggregation, Context context, boolean localAggregationCommand, Integer num) throws IOException, InterruptedException {
-        if (localAggregationCommand) {
-            localAggregation.put(key, localAggregation.getOrDefault(key, 0) + num);
-        } else {
-            word.set(key);
-            count.set(num);
-            context.write(word, count);
-        }
-    }
-    
-    private void flushLocalAggregation(Map<String, Integer> localAggregation, Context context) throws IOException, InterruptedException {
-        for (Map.Entry<String, Integer> entry : localAggregation.entrySet()) {
-            word.set(entry.getKey());
-            count.set(entry.getValue());
-            context.write(word, count);
-        }
-    }
-
     public static class ReducerClass extends Reducer<Text,IntWritable,Text,IntWritable> {
         private IntWritable result = new IntWritable();
         static AWS aws = AWS.getInstance();
@@ -161,9 +160,6 @@ public class CalcVariablesStep {
                     result.set((int) sum);
                     context.write(key, result);
                 }
-
-                
-                
             } catch (Exception e) {
                 // Log error and continue with next key
                 context.setStatus("Error processing key: " + key.toString());
@@ -185,7 +181,7 @@ public class CalcVariablesStep {
         System.out.println("[DEBUG] STEP 1 started!");
         System.out.println(args.length > 0 ? args[0] : "no args");
         Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, "Calc variables step");
+        Job job = Job.getInstance(conf, "CalcVariablesStep");
         job.setJarByClass(CalcVariablesStep.class);
         job.setMapperClass(MapperClass.class);
         job.setPartitionerClass(PartitionerClass.class);
@@ -202,8 +198,7 @@ public class CalcVariablesStep {
         //return to sequence when calculating on 3grams
         job.setInputFormatClass(TextInputFormat.class);/////SequenceFileInputFormat.class);
         TextInputFormat.addInputPath(job, new Path(Defs.HEB_3Gram_path));
-        FileOutputFormat.setOutputPath(job, new Path("s3://bucket163897429777/output_word_count"));
+        FileOutputFormat.setOutputPath(job, new Path(Defs.getPathS3(args[1], ".txt")));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
-    }
     }
 }
