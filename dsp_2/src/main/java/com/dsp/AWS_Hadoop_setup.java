@@ -3,9 +3,15 @@ package com.dsp;
 import java.util.ArrayList;
 import java.util.List;
 
+import software.amazon.awssdk.services.ec2.model.IamInstanceProfileSpecification;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClientBuilder;
 import com.amazonaws.services.elasticmapreduce.model.*;
+import software.amazon.awssdk.services.elasticmapreduce.model.IamInstanceProfileSpecification;
+import software.amazon.awssdk.services.elasticmapreduce.model.JobFlowInstancesConfig;
+
+
+import software.amazon.awssdk.services.ec2.model.IamInstanceProfile;
 
 
 public class AWS_Hadoop_setup { 
@@ -15,12 +21,13 @@ public class AWS_Hadoop_setup {
 
         aws.createBucketIfNotExists(Defs.PROJECT_NAME);
         aws.uploadFileToS3(Defs.stopWordsFile, Defs.PROJECT_NAME); // StopWords
-        aws.uploadFileToS3(Defs.logsFile, Defs.PROJECT_NAME); // StopWords
-        for(int i = 0 ; i < Defs.Steps_Names.length ; i++){
+        aws.uploadFileToS3(Defs.testingFiles[0], Defs.PROJECT_NAME); 
+        aws.uploadFileToS3("/home/yarden/Distributed_Systems_2/dsp_2/target/aws-hadoop-setup.jar", Defs.PROJECT_NAME); 
+        /***for(int i = 0 ; i < Defs.Steps_Names.length ; i++){
             aws.uploadFileToS3(Defs.jarPath + Defs.Steps_Names[i] + ".jar", Defs.PROJECT_NAME); //Upload Jars
-        }
+        }***/
 
-        AmazonElasticMapReduce mapReduce = AmazonElasticMapReduceClientBuilder.standard().withRegion(Defs.regions).build();
+        AmazonElasticMapReduce mapReduce = AmazonElasticMapReduceClientBuilder.standard().withRegion(Defs.region1).build();
         
         List<HadoopJarStepConfig> hadoopJarStepConfigs = new ArrayList<HadoopJarStepConfig>();
         for(int i = 0 ; i < Defs.Steps_Names.length ; i++) { 
@@ -45,10 +52,11 @@ public class AWS_Hadoop_setup {
                 .withInstanceCount(Defs.instanceCount)
                 .withMasterInstanceType("m4.large")
                 .withSlaveInstanceType("m4.large")
-                .withHadoopVersion("2.9.2")
-                .withEc2KeyName("vockey")
+                .withHadoopVersion(Defs.HADOOP_VER)
+                .withEc2KeyName(Defs.KEY_NAME_SSH)
                 .withKeepJobFlowAliveWhenNoSteps(false)
-                .withPlacement(new PlacementType("us-east-1a"));;
+                .withPlacement(new PlacementType(Defs.placementRegion))
+                .withIamInstanceProfile(iamInstanceProfile(IamInstanceProfileSpecification.builder().name("LabInstanceProfile").build()));
         System.out.println("Created instances config.");
 
         RunJobFlowRequest runFlowRequest = new RunJobFlowRequest()
