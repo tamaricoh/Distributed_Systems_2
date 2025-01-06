@@ -7,12 +7,18 @@ import java.io.IOException;
 // import java.util.Arrays;
 // import java.util.List;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 // import org.apache.commons.lang3.StringUtils;
 // import org.apache.hadoop.io.IntWritable;
 // import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 // import com.fasterxml.jackson.jaxrs.json.annotation.JSONP.Def;
 
@@ -78,5 +84,28 @@ public class probabilityCalcStep {
         public int getPartition(Text key, Text value, int numPartitions) {
             return key.hashCode() % numPartitions;
         }
+    }
+
+        public static void main(String[] args) throws Exception {
+        System.out.println("[DEBUG] STEP 2 started!");
+        System.out.println(args.length > 0 ? args[0] : "no args");
+        Configuration conf = new Configuration();
+        Job job = Job.getInstance(conf, Defs.Steps_Names[2]);
+        job.setJarByClass(valuesJoinerStep.class);
+        job.setMapperClass(MapperClass.class);
+        job.setPartitionerClass(PartitionerClass.class);
+        job.setCombinerClass(ReducerClass.class);
+        job.setReducerClass(ReducerClass.class);
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(Text.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(DoubleWritable.class);
+
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+
+        job.setInputFormatClass(SequenceFileInputFormat.class);
+        SequenceFileInputFormat.addInputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[1], ".class")));
+        FileOutputFormat.setOutputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[2], ".class")));
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
