@@ -3,7 +3,6 @@ package com.dsp;
 import java.util.ArrayList;
 import java.util.List;
 
-import software.amazon.awssdk.services.ec2.model.IamInstanceProfileSpecification;
 import software.amazon.awssdk.services.emr.EmrClient;
 import software.amazon.awssdk.services.emr.model.*;
 
