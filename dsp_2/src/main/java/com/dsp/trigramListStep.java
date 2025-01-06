@@ -25,7 +25,7 @@ public class trigramListStep {
     public static class MapperClass extends Mapper<LongWritable, Text, Text, Text> {
     @Override
     public void map(LongWritable key, Text input, Context context) throws IOException, InterruptedException {
-        String[] parts = input.toString().split(" ");
+        String[] parts = input.toString().split(Defs.delimiter);
         if (parts.length >= 4) {
             String twoWords = parts[0] + " " + parts[1];
             String valueWithThirdWord = parts[2] + " " + parts[3];
@@ -40,7 +40,7 @@ public static class ReducerClass extends Reducer<Text, Text, Text, Text> {
         ArrayList<Map.Entry<String, Double>> pairs = new ArrayList<>();
         
         for (Text val : values) {
-            String[] parts = val.toString().split(" ");
+            String[] parts = val.toString().split(Defs.delimiter);
             pairs.add(new AbstractMap.SimpleEntry<>(parts[0], Double.parseDouble(parts[1])));
         }
         
@@ -65,7 +65,7 @@ public static class ReducerClass extends Reducer<Text, Text, Text, Text> {
         job.setMapOutputValueClass(Text.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
-        job.setInputFormatClass(TextInputFormat.class);
+        job.setInputFormatClass(SequenceFileInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);
 
         // Set input and output paths

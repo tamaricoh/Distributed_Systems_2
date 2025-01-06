@@ -35,18 +35,17 @@ public class Defs {
     public static final String HEB_3Gram_path = "s3://datasets.elasticmapreduce/ngrams/books/20090715/heb-all/3gram/data";
     public static final String S3_BUCKET_PATH = "s3://" + PROJECT_NAME + "/";
     public static final String PATH_TO_TARGET = "/home/yarden/Distributed_Systems_2/dsp_2/target/";
-    public static final String[] Steps_Names = {"CalcVariablesStep", "valuesJoinerStep", "probabilityCalcStep"};
-    public static final String[] Step_Output_Name = {"word-sequences", "triple-sequences", "word-sequence-probabillity"};
+    public static final String[] Steps_Names = {"CalcVariablesStep", "valuesJoinerStep", "probabilityCalcStep", "trigramListStep"};
+    public static final String[] Step_Output_Name = {"word-sequences", "triple-sequences", "word-sequence-probabillity", "trigram-result-file"};
 
     public static String getStepJarPath(int i){
         return  getPathS3(Steps_Names[i], ".jar");
     }
     public static String getPathS3(String file_name, String file_format){
-        return "s3://" + PROJECT_NAME + "/" + file_name + file_format;
+        return S3_BUCKET_PATH + file_name + file_format;
     }
     public static String[] getStepArgs(int stepNum){
         String[] args;
-        System.out.println("[DEBUG]  step number: " + stepNum);
         switch (stepNum){
             case 0:
                 args = new String[]{ 
@@ -66,6 +65,12 @@ public class Defs {
                 args = new String[]{
                     "s3://" + PROJECT_NAME + "/" + Step_Output_Name[1] + "/", // input
                     "s3://" + PROJECT_NAME + "/" + Step_Output_Name[2] // output
+                };
+                break;
+            case 3:
+                args = new String[]{
+                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[1] + "/", // input
+                    S3_BUCKET_PATH + Step_Output_Name[3] // output
                 };
                 break;
             default:

@@ -11,9 +11,9 @@ import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 // import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -39,11 +39,17 @@ public class CalcVariablesStep {
 
 
         protected void setup(Context context) throws IOException {
-            try (BufferedReader reader = new BufferedReader(new FileReader(Defs.stopWordsFile))) {
+            String stop_words = AWS.getInstance().downloadFromS3(Defs.PROJECT_NAME, "heb-stopwords.txt", "/tmp");
+            if (stop_words == null) {
+                throw new IOException("Failed to download stop words file from S3");
+            }
+            try (BufferedReader reader = new BufferedReader(new FileReader(stop_words))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     stopWords.add(line.trim());
                 }
+            } catch (IOException e) {
+                throw new IOException("Error reading stop words file: " + e.getMessage());
             }
         }
 
@@ -127,18 +133,12 @@ public class CalcVariablesStep {
 
         @Override
         public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
-            long sum = 0;
+            int sum = 0;
 
             try {
                 // Calculate sum of values
                 for (IntWritable value : values) {
                     sum += value.get();
-                }
-
-                if (sum > Integer.MAX_VALUE) {
-                    // Prevent overflow, warn and cap the sum at Integer.MAX_VALUE
-                    context.setStatus("Warning: Sum overflow for key: " + key.toString());
-                    sum = Integer.MAX_VALUE;
                 }
 
                 // Calculate the number of words based on asterisks in the key
@@ -151,10 +151,12 @@ public class CalcVariablesStep {
                 } else if (numWords == 2) {  // w1w2*
                     sum = sum / 2;
                 }
-
+                ///
+                //could be a problem...
+                ///
                 if(key.toString().equals("c0" + Defs.astrix + Defs.astrix)){
                     aws.createSqsQueue(Defs.C0_SQS);
-                    aws.sendSQSMessage(Defs.C0_SQS, String.valueOf((int)sum));
+                    aws.sendSQSMessage(Defs.C0_SQS, String.valueOf(sum));
                 }
                 else {
                     result.set((int) sum);
@@ -181,7 +183,7 @@ public class CalcVariablesStep {
         System.out.println("[DEBUG] STEP 1 started!");
         System.out.println(args.length > 0 ? args[0] : "no args");
         Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, "CalcVariablesStep");
+        Job job = Job.getInstance(conf, Defs.Steps_Names[0]);
         job.setJarByClass(CalcVariablesStep.class);
         job.setMapperClass(MapperClass.class);
         job.setPartitionerClass(PartitionerClass.class);
@@ -189,16 +191,17 @@ public class CalcVariablesStep {
         job.setReducerClass(ReducerClass.class);
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(IntWritable.class);
+        //TODO::
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
 
         // For n_grams S3 files.
         // Note: This is English version and you should change the path to the relevant one
-        job.setOutputFormatClass(TextOutputFormat.class);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
         //return to sequence when calculating on 3grams
         job.setInputFormatClass(TextInputFormat.class);/////SequenceFileInputFormat.class);
-        TextInputFormat.addInputPath(job, new Path(Defs.HEB_3Gram_path));
-        FileOutputFormat.setOutputPath(job, new Path(Defs.getPathS3(args[1], ".txt")));
+        TextInputFormat.addInputPath(job, new Path(Defs.getPathS3("hebrew-3grams", ".txt")));
+        FileOutputFormat.setOutputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[0], ".class")));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
