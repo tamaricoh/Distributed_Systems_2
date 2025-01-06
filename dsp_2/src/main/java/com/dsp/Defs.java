@@ -1,6 +1,6 @@
 package com.dsp;
 
-import com.amazonaws.regions.Regions;
+import software.amazon.awssdk.regions.Region;
 
 public class Defs {
     public static String stopWordsFile = "/home/yarden/Distributed_Systems_2/dsp_2/src/main/resources/heb-stopwords.txt";
@@ -17,8 +17,8 @@ public class Defs {
 
     public enum ValueType {}
 
-    public static Regions region1 = Regions.US_EAST_1;
-    public static Regions region2 = Regions.US_WEST_2;
+    public static Region region1 = Region.US_EAST_1;
+    public static Region region2 = Region.US_WEST_2;
     public static String placementRegion = "us-east-1a"; 
 
     public static final int instanceCount = 4;
