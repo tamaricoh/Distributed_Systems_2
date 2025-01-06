@@ -14,7 +14,9 @@ public class AWS_Hadoop_setup {
         aws.createBucketIfNotExists(Defs.PROJECT_NAME);
         aws.uploadFileToS3(Defs.stopWordsFile, Defs.PROJECT_NAME); // StopWords
         aws.uploadFileToS3(Defs.testingFiles[0], Defs.PROJECT_NAME); 
-        aws.uploadFileToS3("/home/yarden/Distributed_Systems_2/dsp_2/target/aws-hadoop-setup.jar", Defs.PROJECT_NAME); 
+        for(int i =0; i<Defs.Steps_Names.length; i++){
+            aws.uploadFileToS3(Defs.PATH_TO_TARGET + Defs.Steps_Names[i] + ".jar", Defs.PROJECT_NAME);
+        } 
 
         EmrClient emrClient = EmrClient.builder()
             .region(Defs.region1)
@@ -23,7 +25,7 @@ public class AWS_Hadoop_setup {
         List<HadoopJarStepConfig> hadoopJarSteps = new ArrayList<>();
         for(int i = 0; i < Defs.Steps_Names.length; i++) { 
             hadoopJarSteps.add(HadoopJarStepConfig.builder()
-                .jar(Defs.JAR_PATH)
+                .jar(Defs.getStepJarPath(i))        //path to jar in s3
                 .mainClass(Defs.Steps_Names[i])
                 .args(Defs.getStepArgs(i))
                 .build());
