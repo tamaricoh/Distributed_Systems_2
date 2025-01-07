@@ -1,5 +1,9 @@
 package com.dsp;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import software.amazon.awssdk.services.s3.model.BucketLocationConstraint;
@@ -7,6 +11,8 @@ import software.amazon.awssdk.services.s3.model.CreateBucketConfiguration;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -18,9 +24,7 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 import software.amazon.awssdk.services.sqs.model.SqsException;
-
-// import java.nio.file.Paths;
-
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.regions.Region;
 
 
@@ -138,5 +142,43 @@ public class AWS {
             System.err.println("Error checking SQS queue: " + e.awsErrorDetails().errorMessage());
         }
         return -1; // Return this if no matching message is found
+    }
+
+    public String downloadFromS3(String bucketName, String s3Key, String localPath) {
+        try {
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(s3Key)
+                .build();
+
+        Path destination = Paths.get(localPath, s3Key);
+        ResponseInputStream<GetObjectResponse> response = s3.getObject(getObjectRequest);
+        
+        File file = destination.toFile();
+        try (FileOutputStream fos = new FileOutputStream(file);
+             InputStream is = response) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = is.read(buffer)) != -1) {
+                fos.write(buffer, 0, bytesRead);
+            }
+        }
+        
+        System.out.println("[SUCCESS] File downloaded: " + destination);
+        return destination.toString();
+
+        } catch (S3Exception s3e) {
+            System.err.println("[S3 ERROR] Bucket: " + bucketName + ", Key: " + s3Key);
+            System.err.println("[S3 ERROR] Message: " + s3e.awsErrorDetails().errorMessage());
+            System.err.println("[S3 ERROR] Code: " + s3e.awsErrorDetails().errorCode());
+            return null;
+        } catch (IOException ioe) {
+            System.err.println("[IO ERROR] Failed to write to " + localPath);
+            System.err.println("[IO ERROR] Message: " + ioe.getMessage());
+            return null;
+        } catch (Exception e) {
+            System.err.println("[GENERAL ERROR] " + e.getClass().getName() + ": " + e.getMessage());
+            return null;
+        }
     }
 }

@@ -128,10 +128,10 @@ public class valuesJoinerStep {
         job.setOutputValueClass(Text.class);
 
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
-
         job.setInputFormatClass(SequenceFileInputFormat.class);
-        SequenceFileInputFormat.addInputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[0], ".class")));
-        FileOutputFormat.setOutputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[1], ".class")));
+
+        SequenceFileInputFormat.addInputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[0], "")));
+        FileOutputFormat.setOutputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[1], "")));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
