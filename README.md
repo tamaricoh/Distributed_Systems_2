@@ -1,4 +1,4 @@
-# Hebrew Word Prediction System - README
+# Hebrew Word Prediction System
 
 ### Submitted by:
 
