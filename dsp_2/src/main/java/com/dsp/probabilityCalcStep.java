@@ -56,25 +56,42 @@ public class probabilityCalcStep {
                 switch (parts[1]) {
                     case "N1:":
                         nums[0] = Integer.parseInt(parts[1]);
-
+                        break;
                     case "N2:":
                         nums[1] = Integer.parseInt(parts[1]);
-                    
+                        break;
                     case "C1:":
                         nums[3] = Integer.parseInt(parts[1]);
-                    
+                        break;
                     case "C2:":
                         nums[4] = Integer.parseInt(parts[1]);
-                
+                        break;
                     default:
                         context.setStatus("Error processing num values: " + valueStr +" of key "+ key.toString());
                         continue;
                 }
             }
             int C0 = aws.checkSQSQueue(Defs.C0_SQS);
-            double p = Calc.calcP(nums[0], nums[1], nums[2], C0, nums[3], nums[4]);
+            double p = calcP(nums[0], nums[1], nums[2], C0, nums[3], nums[4]);
             newVal.set(p);
             context.write(key, newVal);
+        }
+
+        private static double calcP(int n1, int n2, int n3, int c0, int c1, int c2) {
+            double k2 = calcKi(n2);
+            double k3 = calcKi(n3);
+            double first = k3*(n3/c2);
+            double second = (1-k3)*k2*(n2/c1);
+            double third = (1-k3)*(1-k2)*(n1/c0);
+            return first + second + third;
+        }
+    
+        
+        private static double calcKi(int ni) {
+            double log_ni = Math.log(ni+1);
+            double numerator = log_ni + 1;
+            double denominator = log_ni + 2;
+            return numerator/denominator;
         }
     }
 
@@ -91,7 +108,7 @@ public class probabilityCalcStep {
         System.out.println(args.length > 0 ? args[0] : "no args");
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, Defs.Steps_Names[2]);
-        job.setJarByClass(valuesJoinerStep.class);
+        job.setJarByClass(probabilityCalcStep.class);
         job.setMapperClass(MapperClass.class);
         job.setPartitionerClass(PartitionerClass.class);
         job.setCombinerClass(ReducerClass.class);
@@ -104,8 +121,8 @@ public class probabilityCalcStep {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         job.setInputFormatClass(SequenceFileInputFormat.class);
-        SequenceFileInputFormat.addInputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[1], ".class")));
-        FileOutputFormat.setOutputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[2], ".class")));
+        SequenceFileInputFormat.addInputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[1], "")));
+        FileOutputFormat.setOutputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[2], "")));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }

@@ -201,7 +201,7 @@ public class CalcVariablesStep {
         //return to sequence when calculating on 3grams
         job.setInputFormatClass(TextInputFormat.class);/////SequenceFileInputFormat.class);
         TextInputFormat.addInputPath(job, new Path(Defs.getPathS3("hebrew-3grams", ".txt")));
-        FileOutputFormat.setOutputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[0], ".class")));
+        FileOutputFormat.setOutputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[0], "")));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }

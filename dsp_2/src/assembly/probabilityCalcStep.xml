@@ -13,7 +13,6 @@
                 <include>com/dsp/probabilityCalcStep.class</include>
                 <include>com/dsp/Defs.class</include>
                 <include>com/dsp/AWS.class</include>
-                <include>com/dsp/Calc.class</include>
             </includes>
         </fileSet>
     </fileSets>
