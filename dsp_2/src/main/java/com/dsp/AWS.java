@@ -114,7 +114,7 @@ public class AWS {
         return getQueueUrlResponse.queueUrl();
     }
 
-    public int checkSQSQueue(String queueName) {
+    public Double checkSQSQueue(String queueName) {
         try {
             // Retrieve the queue URL
             GetQueueUrlRequest getQueueUrlRequest = GetQueueUrlRequest.builder()
@@ -135,13 +135,12 @@ public class AWS {
             // Loop through the received messages
             for (Message message : receiveMessageResponse.messages()) {
                 String messageBody = message.body();
-                int C0 = Integer.parseInt(messageBody);
-                return C0;
+                return Double.parseDouble(messageBody);
             }
         } catch (SqsException e) {
             System.err.println("Error checking SQS queue: " + e.awsErrorDetails().errorMessage());
         }
-        return -1; // Return this if no matching message is found
+        return -1.0; // Return this if no matching message is found
     }
 
     public String downloadFromS3(String bucketName, String s3Key, String localPath) {

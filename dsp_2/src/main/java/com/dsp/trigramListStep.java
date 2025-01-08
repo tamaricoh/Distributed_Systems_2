@@ -87,6 +87,7 @@ public static class ReducerClass extends Reducer<Text, Text, Text, Text> {
         job.setMapOutputValueClass(Text.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
+        job.setNumReduceTasks(1);
         // job.setInputFormatClass(SequenceFileInputFormat.class);
         // job.setOutputFormatClass(TextOutputFormat.class);
         // Set input and output paths
