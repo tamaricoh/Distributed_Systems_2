@@ -31,20 +31,22 @@ public class probabilityCalcStep {
 
     // Mapper class for the second step of sequence processing
     public static class MapperClass extends Mapper<Text, Text, Text, Text> {
-        // private Text newVal = new Text();
-        // private Text newKey = new Text();
+        private Text newVal = new Text();
+        private Text newKey = new Text();
 
         @Override
         public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
-            System.out.println("[DEBUG] Mapper input - Key: " + key + ", Value: " + value);
-            context.write(key, value);
+            String[] parts = value.toString().split("\t");
+            newKey.set(parts[0]);
+            newVal.set(parts[1]);
+            context.write(newKey, newVal);
         }
     }
 
     // Reducer class for the second step of sequence processing
     public static class ReducerClass extends Reducer<Text, Text, Text, Text> {
 
-        // private DoubleWritable newVal = new DoubleWritable();
+        private Text newKey = new Text();
         private Text newVal = new Text();
         static AWS aws = AWS.getInstance();
 
@@ -53,8 +55,9 @@ public class probabilityCalcStep {
             int[] nums = new int[5];
 
             for (Text value : values){
+                // value = 
                 String valueStr = value.toString();
-                String[] parts = valueStr.split(Defs.seperator);
+                String[] parts = value.toString().split("\\&\\&");
                 nums[2] = Integer.parseInt(parts[parts.length - 1]);
                 switch (parts[1]) {
                     case "N1:":
@@ -119,7 +122,7 @@ public class probabilityCalcStep {
         job.setMapOutputValueClass(Text.class);
 
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(DoubleWritable.class);
+        job.setOutputValueClass(Text.class);
 
         // job.setOutputFormatClass(SequenceFileOutputFormat.class);
         // job.setInputFormatClass(SequenceFileInputFormat.class);
