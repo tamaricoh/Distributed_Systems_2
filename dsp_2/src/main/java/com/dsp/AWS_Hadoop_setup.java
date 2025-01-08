@@ -11,7 +11,8 @@ public class AWS_Hadoop_setup {
     static AWS aws = AWS.getInstance();
     
     public static void main(String[] args) {
-        aws.createBucketIfNotExists(Defs.PROJECT_NAME);
+        //aws.createBucketIfNotExists(Defs.PROJECT_NAME);
+        aws.createSqsQueue(Defs.C0_SQS);
         aws.uploadFileToS3(Defs.stopWordsFile, Defs.PROJECT_NAME); // StopWords
         aws.uploadFileToS3(Defs.testingFiles[0], Defs.PROJECT_NAME); 
         for(int i =0; i<Defs.Steps_Names.length; i++){
@@ -65,7 +66,7 @@ public class AWS_Hadoop_setup {
                 .releaseLabel("emr-5.11.0")
                 .build();
         System.out.println("Created run flow request.");
-
+        
         RunJobFlowResponse runJobFlowResult = emrClient.runJobFlow(runFlowRequest);
         String jobFlowId = runJobFlowResult.jobFlowId();
         System.out.println("Ran job flow with id: " + jobFlowId);
