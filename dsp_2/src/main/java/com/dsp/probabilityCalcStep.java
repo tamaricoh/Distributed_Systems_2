@@ -52,13 +52,13 @@ public class probabilityCalcStep {
 
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-            Double[] nums = new Double[5];
+            Double[] nums = new Double[]{0.0, 0.0, 0.0, 0.0, 0.0};
             
 
             for (Text value : values){
                 // value = 
                 String valueStr = value.toString();
-                String[] parts = value.toString().split("\\&\\&");
+                String[] parts = value.toString().split("\\%\\%");
                 nums[2] = Double.parseDouble(parts[parts.length - 1]);
                 switch (parts[1]) {
                     case "N1:":
@@ -78,7 +78,7 @@ public class probabilityCalcStep {
                         continue;
                 }
             }
-            Double C0 = (double) aws.checkSQSQueue(Defs.C0_SQS);
+            Double C0 = aws.checkSQSQueue(Defs.C0_SQS);
             Double p = calcP(nums[0], nums[1], nums[2], C0, nums[3], nums[4]);
             newVal.set(String.valueOf(p));
             context.write(key, newVal);
