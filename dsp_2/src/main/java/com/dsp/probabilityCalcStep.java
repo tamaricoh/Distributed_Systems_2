@@ -52,25 +52,26 @@ public class probabilityCalcStep {
 
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-            int[] nums = new int[5];
+            double[] nums = new double[5];
+            
 
             for (Text value : values){
                 // value = 
                 String valueStr = value.toString();
                 String[] parts = value.toString().split("\\&\\&");
-                nums[2] = Integer.parseInt(parts[parts.length - 1]);
+                nums[2] = Double.parseDouble(parts[parts.length - 1]);
                 switch (parts[1]) {
                     case "N1:":
-                        nums[0] = Integer.parseInt(parts[1]);
+                        nums[0] = Double.parseDouble(parts[1]);
                         break;
                     case "N2:":
-                        nums[1] = Integer.parseInt(parts[1]);
+                        nums[1] = Double.parseDouble(parts[1]);
                         break;
                     case "C1:":
-                        nums[3] = Integer.parseInt(parts[1]);
+                        nums[3] = Double.parseDouble(parts[1]);
                         break;
                     case "C2:":
-                        nums[4] = Integer.parseInt(parts[1]);
+                        nums[4] = Double.parseDouble(parts[1]);
                         break;
                     default:
                         context.setStatus("Error processing num values: " + valueStr +" of key "+ key.toString());
@@ -78,7 +79,7 @@ public class probabilityCalcStep {
                 }
             }
             int C0 = aws.checkSQSQueue(Defs.C0_SQS);
-            double p = calcP(nums[0], nums[1], nums[2], C0, nums[3], nums[4]);
+            double p = calcP((int) nums[0],(int) nums[1],(int) nums[2],(int) C0,(int) nums[3],(int) nums[4]);
             newVal.set(String.valueOf(p));
             context.write(key, newVal);
         }
