@@ -1,27 +1,14 @@
 package com.dsp;
 
-// import java.io.BufferedReader;
-// import java.io.FileReader;
 import java.io.IOException;
-// import java.util.ArrayList;
-// import java.util.Arrays;
-// import java.util.List;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-// import org.apache.commons.lang3.StringUtils;
-// import org.apache.hadoop.io.IntWritable;
-// import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-
-// import com.fasterxml.jackson.jaxrs.json.annotation.JSONP.Def;
 
 import org.apache.hadoop.mapreduce.Partitioner;
 
@@ -30,12 +17,12 @@ import org.apache.hadoop.mapreduce.Partitioner;
 public class probabilityCalcStep {
 
     // Mapper class for the second step of sequence processing
-    public static class MapperClass extends Mapper<Text, Text, Text, Text> {
+    public static class MapperClass extends Mapper<Object, Text, Text, Text> {
         private Text newVal = new Text();
         private Text newKey = new Text();
 
         @Override
-        public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+        public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String[] parts = value.toString().split("\t");
             newKey.set(parts[0]);
             newVal.set(parts[1]);
@@ -53,7 +40,7 @@ public class probabilityCalcStep {
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             double[] nums = new double[5];
-            
+
 
             for (Text value : values){
                 // value = 

@@ -105,13 +105,11 @@ public class CalcVariablesStep
                 sum += Double.parseDouble(value.toString());
             }
 			if(key.toString().equals("C0" + Defs.astrix + Defs.astrix)){
-				aws.createSqsQueue(Defs.C0_SQS);
 				aws.sendSQSMessage(Defs.C0_SQS, String.valueOf(sum));
 			}
 			else {
 				context.write(key, new Text(Double.toString(sum)));
-			}
-            
+			} 
         }
     }
 	
