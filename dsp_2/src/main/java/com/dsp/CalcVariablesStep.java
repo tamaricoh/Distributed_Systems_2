@@ -325,7 +325,7 @@ public class CalcVariablesStep
             for (Text value : values) {
                 sum += Double.parseDouble(value.toString());
             }
-			if(key.toString().equals("C0" + Defs.astrix + Defs.astrix)){
+			if(key.toString().equals("C0")){
 				aws.createSqsQueue(Defs.C0_SQS);
 				aws.sendSQSMessage(Defs.C0_SQS, String.valueOf(sum));
 			}
