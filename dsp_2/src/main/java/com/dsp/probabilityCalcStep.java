@@ -52,7 +52,7 @@ public class probabilityCalcStep {
 
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-            double[] nums = new double[5];
+            Double[] nums = new Double[5];
             
 
             for (Text value : values){
@@ -78,13 +78,13 @@ public class probabilityCalcStep {
                         continue;
                 }
             }
-            int C0 = aws.checkSQSQueue(Defs.C0_SQS);
-            double p = calcP((int) nums[0],(int) nums[1],(int) nums[2],(int) C0,(int) nums[3],(int) nums[4]);
+            Double C0 = (double) aws.checkSQSQueue(Defs.C0_SQS);
+            Double p = calcP(nums[0], nums[1], nums[2], C0, nums[3], nums[4]);
             newVal.set(String.valueOf(p));
             context.write(key, newVal);
         }
 
-        private static double calcP(int n1, int n2, int n3, int c0, int c1, int c2) {
+        private static Double calcP(Double n1, Double n2, Double n3, Double c0, Double c1, Double c2) {
             double k2 = calcKi(n2);
             double k3 = calcKi(n3);
             double first = k3*(n3/c2);
@@ -94,7 +94,7 @@ public class probabilityCalcStep {
         }
     
         
-        private static double calcKi(int ni) {
+        private static double calcKi(Double ni) {
             double log_ni = Math.log(ni+1);
             double numerator = log_ni + 1;
             double denominator = log_ni + 2;
