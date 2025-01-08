@@ -114,9 +114,8 @@ public class valuesJoinerStep {
 
     public static void main(String[] args) throws Exception {
         System.out.println("[DEBUG] STEP 2 started!");
-        System.out.println(args.length > 0 ? args[0] : "no args");
         Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, Defs.Steps_Names[1]);
+        Job job = Job.getInstance(conf, args[0]);
         job.setJarByClass(valuesJoinerStep.class);
         job.setMapperClass(MapperClass.class);
         job.setPartitionerClass(PartitionerClass.class);
@@ -130,8 +129,8 @@ public class valuesJoinerStep {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         job.setInputFormatClass(SequenceFileInputFormat.class);
 
-        SequenceFileInputFormat.addInputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[0], "")));
-        FileOutputFormat.setOutputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[1], "")));
+        SequenceFileInputFormat.addInputPath(job, new Path(args[1]));
+        FileOutputFormat.setOutputPath(job, new Path(args[2]));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }

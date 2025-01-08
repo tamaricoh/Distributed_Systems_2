@@ -35,6 +35,7 @@ public class probabilityCalcStep {
 
         @Override
         public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+            System.out.println("[DEBUG] Mapper input - Key: " + key + ", Value: " + value);
             context.write(key, value);
         }
     }
@@ -99,30 +100,31 @@ public class probabilityCalcStep {
     public static class PartitionerClass extends Partitioner<Text, Text> {
         @Override
         public int getPartition(Text key, Text value, int numPartitions) {
-            return key.hashCode() % numPartitions;
+            return (numPartitions == 0) ? 0 : Math.abs(key.hashCode() % numPartitions);
         }
     }
 
         public static void main(String[] args) throws Exception {
         System.out.println("[DEBUG] STEP 2 started!");
-        System.out.println(args.length > 0 ? args[0] : "no args");
         Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, Defs.Steps_Names[2]);
+        Job job = Job.getInstance(conf, args[0]);
         job.setJarByClass(probabilityCalcStep.class);
         job.setMapperClass(MapperClass.class);
         job.setPartitionerClass(PartitionerClass.class);
-        job.setCombinerClass(ReducerClass.class);
         job.setReducerClass(ReducerClass.class);
+
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(Text.class);
+
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(DoubleWritable.class);
 
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
-
         job.setInputFormatClass(SequenceFileInputFormat.class);
-        SequenceFileInputFormat.addInputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[1], "")));
-        FileOutputFormat.setOutputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[2], "")));
+
+        SequenceFileInputFormat.addInputPath(job, new Path(args[1]));
+        FileOutputFormat.setOutputPath(job, new Path(args[2]));
+
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }

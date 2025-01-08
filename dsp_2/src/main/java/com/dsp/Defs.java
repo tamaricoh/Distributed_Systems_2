@@ -21,7 +21,7 @@ public class Defs {
     public static Region region2 = Region.US_WEST_2;
     public static String placementRegion = "us-east-1a"; 
 
-    public static final int instanceCount = 2;
+    public static final int instanceCount = 1;
 
     public static final String HADOOP_VER = "3.3.6";
     public static final String KEY_NAME_SSH = "vockey";
@@ -35,8 +35,8 @@ public class Defs {
     public static final String HEB_3Gram_path = "s3://datasets.elasticmapreduce/ngrams/books/20090715/heb-all/3gram/data";
     public static final String S3_BUCKET_PATH = "s3://" + PROJECT_NAME + "/";
     public static final String PATH_TO_TARGET = "/home/yarden/Distributed_Systems_2/dsp_2/target/";
-    public static final String[] Steps_Names = {"CalcVariablesStep", "valuesJoinerStep", "probabilityCalcStep", "trigramListStep"};
-    public static final String[] Step_Output_Name = {"word-sequences", "triple-sequences", "word-sequence-probabillity", "trigram-result-file"};
+    public static final String[] Steps_Names = {"CalcVariablesStep", "valuesJoinerStep", "probabilityCalcStep", "sortSequencesStep"};//"trigramListStep"};
+    public static final String[] Step_Output_Name = {"step1-output", "step2-output", "step3-output", "step4-output"};
 
     public static String getStepJarPath(int i){
         return  getPathS3(Steps_Names[i], ".jar");
@@ -51,26 +51,26 @@ public class Defs {
                 args = new String[]{ 
                     //HEB_3Gram_path,
                     "s3://" + PROJECT_NAME + "/" + "hebrew-3grams.txt",
-                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[0] 
+                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[0]
                 };
                 System.out.println("[DEBUG]  step output name: " + Step_Output_Name[0]);
                 break;
             case 1:
                 args = new String[]{
-                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[0] + "/" , // input
+                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[0], // input
                     "s3://" + PROJECT_NAME + "/" + Step_Output_Name[1] // output
                 };
                 break;
             case 2:
                 args = new String[]{
-                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[1] + "/", // input
+                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[1], // input
                     "s3://" + PROJECT_NAME + "/" + Step_Output_Name[2] // output
                 };
                 break;
             case 3:
                 args = new String[]{
-                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[1] + "/", // input
-                    S3_BUCKET_PATH + Step_Output_Name[3] // output
+                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[2], // input
+                    "s3://" + PROJECT_NAME + "/" + Step_Output_Name[3] // output
                 };
                 break;
             default:
