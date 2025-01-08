@@ -17,6 +17,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
@@ -41,9 +42,10 @@ public class probabilityCalcStep {
     }
 
     // Reducer class for the second step of sequence processing
-    public static class ReducerClass extends Reducer<Text, Text, Text, DoubleWritable> {
+    public static class ReducerClass extends Reducer<Text, Text, Text, Text> {
 
-        private DoubleWritable newVal = new DoubleWritable();
+        // private DoubleWritable newVal = new DoubleWritable();
+        private Text newVal = new Text();
         static AWS aws = AWS.getInstance();
 
         @Override
@@ -74,7 +76,7 @@ public class probabilityCalcStep {
             }
             int C0 = aws.checkSQSQueue(Defs.C0_SQS);
             double p = calcP(nums[0], nums[1], nums[2], C0, nums[3], nums[4]);
-            newVal.set(p);
+            newVal.set(String.valueOf(p));
             context.write(key, newVal);
         }
 
@@ -119,10 +121,10 @@ public class probabilityCalcStep {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(DoubleWritable.class);
 
-        job.setOutputFormatClass(SequenceFileOutputFormat.class);
-        job.setInputFormatClass(SequenceFileInputFormat.class);
+        // job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        // job.setInputFormatClass(SequenceFileInputFormat.class);
 
-        SequenceFileInputFormat.addInputPath(job, new Path(args[1]));
+        FileInputFormat.addInputPath(job, new Path(args[1]));
         FileOutputFormat.setOutputPath(job, new Path(args[2]));
 
         System.exit(job.waitForCompletion(true) ? 0 : 1);
