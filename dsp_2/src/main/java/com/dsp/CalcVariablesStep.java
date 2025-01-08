@@ -181,9 +181,9 @@ public class CalcVariablesStep {
 
     public static void main(String[] args) throws Exception {
         System.out.println("[DEBUG] STEP 1 started!");
-        System.out.println(args.length > 0 ? args[0] : "no args");
+        System.out.println(args.length);
         Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, Defs.Steps_Names[0]);
+        Job job = Job.getInstance(conf, args[0]);
         job.setJarByClass(CalcVariablesStep.class);
         job.setMapperClass(MapperClass.class);
         job.setPartitionerClass(PartitionerClass.class);
@@ -200,8 +200,10 @@ public class CalcVariablesStep {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         //return to sequence when calculating on 3grams
         job.setInputFormatClass(TextInputFormat.class);/////SequenceFileInputFormat.class);
-        TextInputFormat.addInputPath(job, new Path(Defs.getPathS3("hebrew-3grams", ".txt")));
-        FileOutputFormat.setOutputPath(job, new Path(Defs.getPathS3(Defs.Step_Output_Name[0], "")));
+        System.out.println("[DEBUG] args: {" + args[1] +", " +args[2] +"}");
+        TextInputFormat.addInputPath(job, new Path(args[1]));
+        FileOutputFormat.setOutputPath(job, new Path(args[2]));
+
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
