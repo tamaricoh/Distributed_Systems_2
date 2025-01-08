@@ -54,21 +54,13 @@ public class valuesJoinerStep {
                 context.write(newKey, newVal);
             }
             else {
-                newKey = new Text(keyWords[1]); 
-                newVal = new Text(prevKey.toString() + Defs.seperator + "C1:" + Defs.seperator + Defs.seperator + "N3:" + Defs.seperator + parts[1]);
-                context.write(newKey, newVal); 
+                context.write(new Text(keyWords[1]), new Text(prevKey.toString() + Defs.seperator + "C1:" + Defs.seperator + Defs.seperator + "N3:" + Defs.seperator + parts[1])); 
                 
-                newKey = new Text(keyWords[2]);
-                newVal = new Text(prevKey.toString() + Defs.seperator + "N1:" + Defs.seperator + Defs.seperator + "N3:" + Defs.seperator + parts[1]);
-                context.write(newKey, newVal);
+                context.write(new Text(keyWords[2]), new Text(prevKey.toString() + Defs.seperator + "N1:" + Defs.seperator + Defs.seperator + "N3:" + Defs.seperator + parts[1]));
 
-                newKey = new Text(keyWords[0] + Defs.delimiter + keyWords[1]);
-                newVal = new Text(prevKey.toString() + Defs.seperator + "C2:" + Defs.seperator + Defs.seperator + "N3:" + Defs.seperator + parts[1]);
-                context.write(newKey, newVal);
+                context.write(new Text(keyWords[0] + Defs.delimiter + keyWords[1]), new Text(prevKey.toString() + Defs.seperator + "C2:" + Defs.seperator + Defs.seperator + "N3:" + Defs.seperator + parts[1]));
 
-                newKey = new Text(keyWords[1] + Defs.delimiter + keyWords[2]);
-                newVal = new Text(prevKey.toString() + Defs.seperator + "N2:" + Defs.seperator + Defs.seperator + "N3:" + Defs.seperator + parts[1]);
-                context.write(newKey, newVal);
+                context.write(new Text(keyWords[1] + Defs.delimiter + keyWords[2]), new Text(prevKey.toString() + Defs.seperator + "N2:" + Defs.seperator + Defs.seperator + "N3:" + Defs.seperator + parts[1]));
             }
         }
     }
@@ -83,25 +75,29 @@ public class valuesJoinerStep {
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             String count = "";
 
-            for (Text value : values) {
-                String valueStr = value.toString();
-                if (valueStr.startsWith("Single") || valueStr.startsWith("Double")) {
-                    String[] parts = valueStr.split("\\%\\%");
-                    count = parts[parts.length - 1];
-                    break;
-                }
+            for (Text val : values){
+                context.write(key, val);
             }
 
-            for (Text value : values) {
-                String valueStr = value.toString();
-                if (!valueStr.startsWith("Single") && !valueStr.startsWith("Double")) {
-                    String[] parts = valueStr.split("\\%\\%");
-                    parts[2] = count;
-                    newVal.set(String.join(Defs.seperator, Arrays.copyOfRange(parts, 1, parts.length)));
-                    newKey.set(parts[0]);
-                    context.write(newKey, newVal);
-                }
-            }
+            // for (Text value : values) {
+            //     String valueStr = value.toString();
+            //     if (valueStr.startsWith("Single") || valueStr.startsWith("Double")) {
+            //         String[] parts = valueStr.split("\\%\\%");
+            //         count = parts[parts.length - 1];
+            //         break;
+            //     }
+            // }
+
+            // for (Text value : values) {
+            //     String valueStr = value.toString();
+            //     if (!valueStr.startsWith("Single") && !valueStr.startsWith("Double")) {
+            //         String[] parts = valueStr.split("\\%\\%");
+            //         parts[2] = count;
+            //         newVal.set(String.join(Defs.seperator, Arrays.copyOfRange(parts, 1, parts.length)));
+            //         newKey.set(parts[0]);
+            //         context.write(newKey, newVal);
+            //     }
+            // }
 
         }
     }
