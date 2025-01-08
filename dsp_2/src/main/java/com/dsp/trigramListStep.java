@@ -23,9 +23,11 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 public class trigramListStep {
     // Mapper class to pass data as-is to the reducer
-    public static class MapperClass extends Mapper<Text, Text, Text, Text> { // ==============
+    public static class MapperClass extends Mapper<Object, Text, Text, Text> { // ==============
+        private Text newVal = new Text();
+        private Text newKey = new Text();
     @Override
-    public void map(Text key, Text input, Context context) throws IOException, InterruptedException {
+    public void map(Object key, Text input, Context context) throws IOException, InterruptedException {
         // System.out.println("[DEBUG] STEP 4 map running");
         // String[] parts = (key.toString()).split(Defs.delimiter);
         // if (parts.length >= 3) {
@@ -37,8 +39,11 @@ public class trigramListStep {
         // else{
         //     System.out.println("[DEBUG]  the input:" + key.toString() + " is invalid");
         // }
-        context.write(key, input);
-    }
+        String[] parts = input.toString().split("\t");
+            newKey.set(parts[0]);
+            newVal.set(parts[1]);
+            context.write(newKey, newVal);
+        }
 }
 
 public static class ReducerClass extends Reducer<Text, Text, Text, Text> {

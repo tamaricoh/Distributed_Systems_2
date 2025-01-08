@@ -30,12 +30,12 @@ import org.apache.hadoop.mapreduce.Partitioner;
 public class probabilityCalcStep {
 
     // Mapper class for the second step of sequence processing
-    public static class MapperClass extends Mapper<Text, Text, Text, Text> {
+    public static class MapperClass extends Mapper<Object, Text, Text, Text> {
         private Text newVal = new Text();
         private Text newKey = new Text();
 
         @Override
-        public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+        public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String[] parts = value.toString().split("\t");
             newKey.set(parts[0]);
             newVal.set(parts[1]);
