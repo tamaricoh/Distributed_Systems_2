@@ -2,6 +2,7 @@ package com.dsp;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Job;
@@ -9,6 +10,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
@@ -74,16 +76,15 @@ public class sortSequencesStep {
         public double getValue() { return value; }
     }
 
-    public static class MapperClass extends Mapper<Object, Text, CompositeKey, Text> {
+    public static class MapperClass extends Mapper<Text, DoubleWritable, CompositeKey, Text> {
         private CompositeKey newKey = new CompositeKey();
         private Text newVal = new Text();
 
     @Override
-    protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+    protected void map(Text key, DoubleWritable value, Context context) throws IOException, InterruptedException {
         //  input format: "w1 w2 w3\tvalue"
-        String[] parts = value.toString().split("\t");
-        String[] trigram = parts[0].split(" ");
-        newKey = new CompositeKey(trigram[0], trigram[1],trigram[2], Double.parseDouble(parts[1]));
+        String[] trigram = key.toString().split(" ");
+        newKey = new CompositeKey(trigram[0], trigram[1], trigram[2], value.get());
         newVal.set(trigram[2]);
 
         context.write(newKey, newVal);
@@ -104,7 +105,7 @@ public class sortSequencesStep {
         @Override
         protected void reduce(CompositeKey key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             // Process the sorted input
-            for (Text value : values) {
+            for (Text value : values) { //here value is actully w3
                 // Output format: "w1 w2 w3" -> "value"
                 newKey.set(key.getW1() + " " + key.getW2() + " " + value.toString());
                 newVal.set(String.valueOf(key.getValue()));
@@ -120,13 +121,13 @@ public class sortSequencesStep {
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, args[0]);
         job.setJarByClass(sortSequencesStep.class);
-        // Set map, reduce, partitinior
         job.setMapperClass(MapperClass.class);
         job.setReducerClass(ReducerClass.class);
         job.setPartitionerClass(PartitionerClass.class);
         job.setNumReduceTasks(1); //Ensuring all key-val goes to the same reducer
 
         // Set input/output paths
+        job.setInputFormatClass(SequenceFileInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);
         FileInputFormat.addInputPath(job, new Path(args[1]));
         FileOutputFormat.setOutputPath(job, new Path(args[2]));
@@ -137,14 +138,9 @@ public class sortSequencesStep {
         // Set output key/value classes
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
+
         boolean job_finished = job.waitForCompletion(true);
-        if(job_finished){
-            AWS aws = AWS.getInstance();
-            aws.createSqsQueue("job-completion-time");
-            aws.sendSQSMessage("job-completion-time", "the process: " + job.getJobID().getJtIdentifier() 
-                                                                + "ran for: " + String.valueOf(job.getFinishTime()-job.getStartTime()));
-            
-        
-        }
+        if(job_finished) AWS.getInstance().sendSQSMessage("job-completion-time", 
+                                                                    "job: " + Defs.PROJECT_NAME + " ended at " + System.currentTimeMillis());
     }
 }

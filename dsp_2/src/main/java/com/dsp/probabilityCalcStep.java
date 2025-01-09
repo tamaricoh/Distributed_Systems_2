@@ -1,7 +1,10 @@
 package com.dsp;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -9,35 +12,39 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.Partitioner;
 
 public class probabilityCalcStep {
 
     // Mapper class for the second step of probability 
-    public static class MapperClass extends Mapper<Object, Text, Text, Text> {
-        private Text newVal = new Text();
-        private Text newKey = new Text();
+    public static class MapperClass extends Mapper<Text, Text, Text, Text> {
 
         @Override
-        public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-            String[] parts = value.toString().split("\t");
-            newKey.set(parts[0]);
-            newVal.set(parts[1]);
-            context.write(newKey, newVal);
+        public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+            context.write(key, value);
         }
     }
 
     // Reducer class for the second step of sequence processing
-    public static class ReducerClass extends Reducer<Text, Text, Text, Text> {
+    public static class ReducerClass extends Reducer<Text, Text, Text, DoubleWritable> {
 
         private Text newKey = new Text();
-        private Text newVal = new Text();
+        private DoubleWritable newVal = new DoubleWritable();
         static AWS aws = AWS.getInstance();
+        private static Double C0;
+        
+        @Override
+        protected void setup(Context context) throws IOException {
+			C0 = aws.checkSQSQueue(Defs.C0_SQS);
+		}
+
 
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-            Double[] nums = new Double[]{0.0, 0.0, 0.0, 0.0, 0.0};
+            Double[] nums = new Double[]{0.0, 0.0, 0.0, 1.0, 1.0};
             for (Text value : values){
                 // value = C2:%%465.0%%N3:%%465.0
                 String valueStr = value.toString();
@@ -61,10 +68,9 @@ public class probabilityCalcStep {
                         continue;
                 }
             }
-            Double C0 = aws.checkSQSQueue(Defs.C0_SQS);
             Double p = calcP(nums[0], nums[1], nums[2], C0, nums[3], nums[4]);
-            newVal.set(String.valueOf(p));
             newKey.set(key.toString().replace(Defs.delimiter, Defs.SPACE));
+            newVal.set(p);
             context.write(newKey, newVal);
         }
 
@@ -95,7 +101,6 @@ public class probabilityCalcStep {
     }
 
     public static void main(String[] args) throws Exception {
-        System.out.println("[DEBUG] STEP 2 started!");
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, args[0]);
         job.setJarByClass(probabilityCalcStep.class);
@@ -105,12 +110,13 @@ public class probabilityCalcStep {
 
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(Text.class);
-
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
+        job.setOutputValueClass(DoubleWritable.class);
 
-        // job.setOutputFormatClass(SequenceFileOutputFormat.class);
-        // job.setInputFormatClass(SequenceFileInputFormat.class);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        job.setInputFormatClass(SequenceFileInputFormat.class);
+        //job.setOutputFormatClass(TextFileOutputFormat.class);
+        //job.setInputFormatClass(TextFileInputFormat.class);
 
         FileInputFormat.addInputPath(job, new Path(args[1]));
         FileOutputFormat.setOutputPath(job, new Path(args[2]));

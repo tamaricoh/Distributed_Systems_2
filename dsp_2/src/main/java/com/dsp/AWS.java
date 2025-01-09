@@ -145,6 +145,7 @@ public class AWS {
             ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
                     .queueUrl(queueUrl)
                     .maxNumberOfMessages(1)
+                    .visibilityTimeout(0)
                     .build();
 
             ReceiveMessageResponse receiveMessageResponse = getInstance().sqs.receiveMessage(receiveMessageRequest);

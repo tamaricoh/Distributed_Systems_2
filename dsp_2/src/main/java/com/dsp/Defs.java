@@ -3,11 +3,14 @@ package com.dsp;
 import software.amazon.awssdk.regions.Region;
 
 public class Defs {
-    public static String stopWordsFile = "C:\\Users\\tamar\\Desktop\\B.Sc\\Semester G\\AWS\\Assignment_2\\dsp_2\\src\\main\\resources\\heb-stopwords.txt";
-    // public static String logsFile = "/home/yarden/Distributed_Systems_2/dsp_2/src/main/resources/logs.txt";
-    public static String jarPath = "C:\\Users\\tamar\\Desktop\\B.Sc\\Semester G\\AWS\\Assignment_2\\dsp_2\\target\\";
-    public static String[] testingFiles = {"C:\\Users\\tamar\\Desktop\\B.Sc\\Semester G\\AWS\\Assignment_2\\dsp_2\\src\\main\\resources\\hebrew-3grams.txt"};
-    public static boolean localAggregationCommand = false;
+    //to run change these:
+    public static String stopWordsFile = "/home/yarden/Distributed_Systems_2/dsp_2/src/main/resources/heb-stopwords.txt";
+    public static final String PATH_TO_TARGET = "/home/yarden/Distributed_Systems_2/dsp_2/target/";
+    public static boolean localAggregationCommand = true;
+    public static final int instanceCount = 3;
+    public static final String PROJECT_NAME = "low-instance-count";
+    public static final String Logs_URI = "s3://" + PROJECT_NAME + "/logs";
+    public static final String C0_SQS = "c0-" + PROJECT_NAME;
 
     public static final String delimiter = "$$";
     public static final String seperator = "%%";
@@ -15,28 +18,19 @@ public class Defs {
     public static final String TAB = "\t";
     public static final String SPACE = " ";
 
-    public enum ValueType {}
-
     public static Region region1 = Region.US_EAST_1;
     public static Region region2 = Region.US_WEST_2;
     public static String placementRegion = "us-east-1a"; 
 
-    public static final int instanceCount = 1;
-
-    public static final String HADOOP_VER = "3.3.6";
+    public static final String HADOOP_VER = "3.3.6"; //newest one so why not
     public static final String KEY_NAME_SSH = "vockey";
 
     public static final String TERMINATE_JOB_FLOW_MESSAGE = "TERMINATE_JOB_FLOW";
 
-    public static final String PROJECT_NAME = "word-prediction1";
-    public static final String Logs_URI = "s3://" + PROJECT_NAME + "/logs";
-    public static final String C0_SQS = "C0-sqs";
-
     public static final String HEB_3Gram_path = "s3://datasets.elasticmapreduce/ngrams/books/20090715/heb-all/3gram/data";
     public static final String S3_BUCKET_PATH = "s3://" + PROJECT_NAME + "/";
-    public static final String PATH_TO_TARGET = "C:\\Users\\tamar\\Desktop\\B.Sc\\Semester G\\AWS\\Assignment_2\\dsp_2\\target\\";
-    public static final String[] Steps_Names = {"CalcVariablesStep", "valuesJoinerStep"};//, "probabilityCalcStep", "trigramListStep"};//"trigramListStep"};
-    public static final String[] Step_Output_Name = {"step1-output", "step2-output"};//, "step3-output", "step4-output"};
+    public static final String[] Steps_Names = {"CalcVariablesStep", "valuesJoinerStep", "probabilityCalcStep", "sortSequencesStep"};
+    public static final String[] Step_Output_Name = {"step1-output", "step2-output", "step3-output", "step4-output"};
 
     public static String getStepJarPath(int i){
         return  getPathS3(Steps_Names[i], ".jar");
@@ -49,8 +43,7 @@ public class Defs {
         switch (stepNum){
             case 0:
                 args = new String[]{ 
-                    //HEB_3Gram_path,
-                    "s3://" + PROJECT_NAME + "/" + "hebrew-3grams.txt",
+                    HEB_3Gram_path,
                     "s3://" + PROJECT_NAME + "/" + Step_Output_Name[0]
                 };
                 System.out.println("[DEBUG]  step output name: " + Step_Output_Name[0]);
