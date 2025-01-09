@@ -100,7 +100,7 @@ The size in bytes remains the same for corresponding steps in both scenarios, su
 
 - **Input Size:** All Corpus
 - **Number of Instances:** 8
-- **Total Runtime (in seconds):**
+- **Total Runtime (in seconds):** 565.284
 
 ---
 
