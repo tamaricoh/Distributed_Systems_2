@@ -14,6 +14,8 @@ import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
@@ -85,11 +87,25 @@ public class AWS {
 
     public String uploadFileToS3(String input_file_path, String bucketName) {
         String s3Key = Paths.get(input_file_path).getFileName().toString();
-        if (s3Key.contentEquals("terminate") || s3Key.contentEquals("FileNoTFound")){
-            return null;
-        }
 
         try {
+            // First, check if the file exists in the bucket
+            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(s3Key)
+                    .build();
+
+            try {
+                // Try to fetch the file's metadata to check if it exists
+                getInstance().s3.headObject(headObjectRequest);
+                System.out.println("File already exists in S3: " + s3Key);
+                return s3Key; // File exists, return the key
+            } catch (NoSuchKeyException e) {
+                // If the file doesn't exist, proceed to upload
+                System.out.println("File does not exist in S3. Proceeding with upload...");
+            }
+
+            // File doesn't exist, proceed with upload
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(s3Key)
@@ -99,6 +115,7 @@ public class AWS {
             getInstance().s3.putObject(putObjectRequest, path);
             System.out.println("File uploaded successfully to S3: " + s3Key);
             return s3Key;
+
         } catch (Exception e) {
             System.err.println("Unexpected error during file upload: " + e.getMessage());
             return null;
