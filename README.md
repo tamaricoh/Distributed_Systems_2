@@ -17,15 +17,35 @@ This project generates a **knowledge-base** for a **Hebrew word-prediction syste
 
 ### Steps:
 
-1. **Create JAR File**  
-   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam.
+1. **Update Configuration Files**  
+   Before creating the JAR file, make sure to update the configuration in **Defs.java**. Modify the following variables as needed:
 
-2. **Run the Program**  
-   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam.
+   - `public static String stopWordsFile = "...../heb-stopwords.txt";`
+   - `public static final String PATH_TO_TARGET = "...../target/";`
+
+   Additionally, adjust the settings according to your requirements:
+
+   - `public static boolean localAggregationCommand = true/false;`
+   - `public static final int instanceCount = (int);`
+   - `public static final String PROJECT_NAME = ".....";`
+
+2. **Create JAR File**  
+   To create the JAR file, run the following command:
 
    ```bash
-   java -jar target/WordPredictionSystemLorem ipsum.jar input_file output_file
+   mvn clean package -P aws-hadoop-setup,CalcVariablesStep,valuesJoinerStep,probabilityCalcStep,trigramListStep
    ```
+
+   This will generate the necessary JAR files.
+
+3. **Run the Program**  
+   Once the JAR file is created, you can run the program using this command:
+
+   ```bash
+   java -jar ".....\target\aws-hadoop-setup.jar"
+   ```
+
+Make sure to replace `.....` with the actual path to your project directory.
 
 ---
 
