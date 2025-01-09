@@ -1,35 +1,20 @@
 package com.dsp;
 
-// import java.io.BufferedReader;
-// import java.io.FileReader;
 import java.io.IOException;
-// import java.util.ArrayList;
-// import java.util.Arrays;
-// import java.util.List;
+
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-// import org.apache.commons.lang3.StringUtils;
-// import org.apache.hadoop.io.IntWritable;
-// import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-
-// import com.fasterxml.jackson.jaxrs.json.annotation.JSONP.Def;
-
 import org.apache.hadoop.mapreduce.Partitioner;
 
-
-// Custom writable for our composite value
 public class probabilityCalcStep {
 
-    // Mapper class for the second step of sequence processing
+    // Mapper class for the second step of probability 
     public static class MapperClass extends Mapper<Object, Text, Text, Text> {
         private Text newVal = new Text();
         private Text newKey = new Text();
@@ -109,7 +94,7 @@ public class probabilityCalcStep {
         }
     }
 
-        public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         System.out.println("[DEBUG] STEP 2 started!");
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, args[0]);

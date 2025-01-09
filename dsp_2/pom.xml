@@ -109,7 +109,7 @@
     </build>
 
     <profiles>
-      <!-- sequence-processing -->
+      <!-- valuesJoinerStep -->
       <profile>
         <id>valuesJoinerStep</id>
         <build>

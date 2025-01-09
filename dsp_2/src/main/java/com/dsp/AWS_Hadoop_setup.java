@@ -14,7 +14,7 @@ public class AWS_Hadoop_setup {
         //aws.createBucketIfNotExists(Defs.PROJECT_NAME);
         aws.createSqsQueue(Defs.C0_SQS);
         aws.uploadFileToS3(Defs.stopWordsFile, Defs.PROJECT_NAME); // StopWords
-        aws.uploadFileToS3(Defs.testingFiles[0], Defs.PROJECT_NAME); 
+        //aws.uploadFileToS3(Defs.testingFiles[0], Defs.PROJECT_NAME); 
         for(int i =0; i<Defs.Steps_Names.length; i++){
             aws.uploadFileToS3(Defs.PATH_TO_TARGET + Defs.Steps_Names[i] + ".jar", Defs.PROJECT_NAME);
         } 
