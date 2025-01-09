@@ -11,7 +11,7 @@ public class AWS_Hadoop_setup {
     static AWS aws = AWS.getInstance();
     
     public static void main(String[] args) {
-        //aws.createBucketIfNotExists(Defs.PROJECT_NAME);
+        aws.createBucketIfNotExists(Defs.PROJECT_NAME);
         aws.createSqsQueue(Defs.C0_SQS);
         aws.uploadFileToS3(Defs.stopWordsFile, Defs.PROJECT_NAME); // StopWords
         //aws.uploadFileToS3(Defs.testingFiles[0], Defs.PROJECT_NAME); 
@@ -69,6 +69,8 @@ public class AWS_Hadoop_setup {
         
         RunJobFlowResponse runJobFlowResult = emrClient.runJobFlow(runFlowRequest);
         String jobFlowId = runJobFlowResult.jobFlowId();
+
+        AWS.getInstance().sendSQSMessage("job-completion-time", "job: " + Defs.PROJECT_NAME + " started at " + System.currentTimeMillis());
         System.out.println("Ran job flow with id: " + jobFlowId);
     }
 }
