@@ -2,7 +2,6 @@ package com.dsp;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Job;
@@ -10,7 +9,6 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
@@ -24,11 +22,11 @@ public class sortSequencesStep {
         private String w1;
         private String w2;
         private String w3;
-        private double value;
+        private Double value;
 
         public CompositeKey() {}
 
-        public CompositeKey(String w1, String w2, String w3, double value) {
+        public CompositeKey(String w1, String w2, String w3, Double value) {
             this.w1 = w1;
             this.w2 = w2;
             this.w3 = w3;
@@ -60,7 +58,7 @@ public class sortSequencesStep {
             }
             
             // Then compare w2 (descending)
-            int w2Compare = other.w2.compareTo(this.w2);  // Note the reversed order
+            int w2Compare = other.w2.compareTo(this.w2);
             if (w2Compare != 0) {
                 return w2Compare;
             }
@@ -76,72 +74,77 @@ public class sortSequencesStep {
         public double getValue() { return value; }
     }
 
-    public static class CustomMapper 
-            extends Mapper<Text, DoubleWritable, CompositeKey, DoubleWritable> {
-        
+    public static class MapperClass extends Mapper<Object, Text, CompositeKey, Text> {
+        private CompositeKey newKey = new CompositeKey();
+        private Text newVal = new Text();
+
+    @Override
+    protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+        //  input format: "w1 w2 w3\tvalue"
+        String[] parts = value.toString().split("\t");
+        String[] trigram = parts[0].split(" ");
+        newKey = new CompositeKey(trigram[0], trigram[1],trigram[2], Double.parseDouble(parts[1]));
+        newVal.set(trigram[2]);
+
+        context.write(newKey, newVal);
+    }
+    }
+
+    public static class PartitionerClass extends Partitioner<CompositeKey, Text> {
         @Override
-        protected void map(Text key, DoubleWritable value, Context context) 
-                throws IOException, InterruptedException {
-            System.out.println("Mapper Input - Key: " + key.toString() + ", Value: " + value.get());
-            // Split the key into w1, w2, w3
-            String[] parts = key.toString().split(Defs.delimiter);
-            if (parts.length >= 3) {
-                CompositeKey compositeKey = new CompositeKey(parts[0], parts[1], parts[2], value.get());
-                context.write(compositeKey, value);
+        public int getPartition(CompositeKey key, Text value, int numPartitions) {
+            return (key.getW1().hashCode() & Integer.MAX_VALUE) % numPartitions;
+        }
+    }
+
+    public static class ReducerClass extends Reducer<CompositeKey, Text, Text, Text> {
+        private Text newKey = new Text();
+        private Text newVal = new Text();
+    
+        @Override
+        protected void reduce(CompositeKey key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+            // Process the sorted input
+            for (Text value : values) {
+                // Output format: "w1 w2 w3" -> "value"
+                newKey.set(key.getW1() + " " + key.getW2() + " " + value.toString());
+                newVal.set(String.valueOf(key.getValue()));
+                context.write(newKey, newVal);
             }
         }
     }
 
-    public static class PartitionerClass extends Partitioner<Text, Text> {
-        @Override
-        public int getPartition(Text key, Text value, int numPartitions) {
-            return key.hashCode() % numPartitions;
-        }
-    }
 
-    public static class CustomReducer 
-            extends Reducer<CompositeKey, DoubleWritable, Text, DoubleWritable> {
-        
-        @Override
-        protected void reduce(CompositeKey key, Iterable<DoubleWritable> values, Context context) 
-                throws IOException, InterruptedException {
-            // Reconstruct the original key format
-            String originalKey = key.getW1() + " " + key.getW2() + " " + key.getW3();
-            
-            // Write each value (there should be only one, but we'll iterate just in case)
-            for (DoubleWritable value : values) {
-                context.write(new Text(originalKey), value);
-            }
-        }
-    }
-
+    
     public static void main(String[] args) throws Exception {
 
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, args[0]);
         job.setJarByClass(sortSequencesStep.class);
+        // Set map, reduce, partitinior
+        job.setMapperClass(MapperClass.class);
+        job.setReducerClass(ReducerClass.class);
+        job.setPartitionerClass(PartitionerClass.class);
+        job.setNumReduceTasks(1); //Ensuring all key-val goes to the same reducer
 
         // Set input/output paths
+        job.setOutputFormatClass(TextOutputFormat.class);
         FileInputFormat.addInputPath(job, new Path(args[1]));
         FileOutputFormat.setOutputPath(job, new Path(args[2]));
-
-        // Set input/output formats
-        job.setInputFormatClass(SequenceFileInputFormat.class);
-        job.setOutputFormatClass(TextOutputFormat.class);
-
-        // Set mapper and reducer
-        job.setMapperClass(CustomMapper.class);
-        job.setReducerClass(CustomReducer.class);
-        job.setPartitionerClass(PartitionerClass.class);
-
         // Set map output key/value classes
         job.setMapOutputKeyClass(CompositeKey.class);
-        job.setMapOutputValueClass(DoubleWritable.class);
+        job.setMapOutputValueClass(Text.class);
 
         // Set output key/value classes
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(DoubleWritable.class);
-
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
+        job.setOutputValueClass(Text.class);
+        boolean job_finished = job.waitForCompletion(true);
+        if(job_finished){
+            AWS aws = AWS.getInstance();
+            aws.createSqsQueue("job-completion-time");
+            aws.sendSQSMessage("job-completion-time", "the process: " + job.getJobID().getJtIdentifier() 
+                                                                + "ran for: " + String.valueOf(job.getFinishTime()-job.getStartTime()));
+            
+        
+        }
     }
 }
