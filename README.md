@@ -33,7 +33,7 @@ This project generates a **knowledge-base** for a **Hebrew word-prediction syste
    To create the JAR file, run the following command:
 
    ```bash
-   mvn clean package -P aws-hadoop-setup,CalcVariablesStep,valuesJoinerStep,probabilityCalcStep,trigramListStep
+   mvn clean package -P aws-hadoop-setup,CalcVariablesStep,valuesJoinerStep,probabilityCalcStep,sortSequencesStep
    ```
 
    This will generate the necessary JAR files.
@@ -54,24 +54,59 @@ Make sure to replace `.....` with the actual path to your project directory.
 ### 1. Key-Value Pairs Sent from Mappers to Reducers
 
 - **With Local Aggregation**  
-  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam.
+  Step 1: 1,263,609 pairs (49,584,814 bytes)
+
+  Step 2: 1,806,763 pairs (94,421,826 bytes)
+
+  Step 3: 1,430,872 pairs (70,144,045 bytes)
+
+  Step 4: 357,718 pairs (16,874,406 bytes)
+
+  Total time (with 4 instances): 707.305 seconds
 
 - **Without Local Aggregation**  
-  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam.
+  Step 1: 1,919,992 pairs (49,584,814 bytes)
+
+  Step 2: 1,806,763 pairs (94,421,826 bytes)
+
+  Step 3: 1,430,872 pairs (70,144,045 bytes)
+
+  Step 4: 357,718 pairs (16,874,406 bytes)
+
+  Total time (with 4 instances): 672.306 seconds
+
+The main difference appears in Step 1, where local aggregation reduced the number of key-value pairs from 1,919,992 to 1,263,609 - a reduction of approximately 34%.
+Steps 2, 3, and 4 show identical numbers in both scenarios.
+Interestingly, despite reducing the number of pairs in Step 1, the total execution time was slightly longer with local aggregation (707.305 seconds vs 672.306 seconds).
+The size in bytes remains the same for corresponding steps in both scenarios, suggesting that while the number of pairs was reduced, the total data volume remained constant.
+
+---
 
 ### 2. Scalability Report
 
-- **Running Time with Different Numbers of Mappers**
-  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam.
+#### Run 1: Small Input, 1 Instances
 
-- **Running Time with Different Input Sizes**  
-  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam.
+- **Input Size:** 7KB
+- **Number of Instances:** 1
+- **Total Runtime (in seconds):** 336.3
+
+#### Run 2: Large Input, 3 Instances
+
+- **Input Size:** All Corpus
+- **Number of Instances:** 3
+- **Total Runtime (in seconds):** 874.1
+
+#### Run 3: Large Input, 8 Instances
+
+- **Input Size:** All Corpus
+- **Number of Instances:** 8
+- **Total Runtime (in seconds):**
+
+---
 
 ### 3. Word Pairs Analysis
 
 **10 Interesting Word Pairs and Top-5 Next Words**
-
----
 
 - ארצות הברית
 
@@ -83,8 +118,6 @@ Make sure to replace `.....` with the actual path to your project directory.
 
     The probabilities show common collocations with other countries (Britain, Canadaת Israel) and contexts of international relations (war). The low probabilities (0.7-1.2%) suggest high variability in the third word, which is reasonable given the diverse contexts in which the US is discussed.
 
----
-
 - השקפת העולם
 
   - השקפת העולם הדתית 0.09752293612114937
@@ -94,8 +127,6 @@ Make sure to replace `.....` with the actual path to your project directory.
   - השקפת העולם הסוציאליסטית 0.032837370592245056
 
     The high probabilities for religious (9.7%) and Jewish (7.4%) worldviews highlight the strong influence of religious and cultural discussions. The spread of various ideological perspectives (religious, Jewish, Zionist, socialist) seems to align well with historical and cultural contexts.
-
----
 
 - כותב רבי
 
@@ -107,8 +138,6 @@ Make sure to replace `.....` with the actual path to your project directory.
 
     The probabilities follow expected patterns of rabbinic name frequency.
 
----
-
 - בשביל שלא
 
   - בשביל שלא הוכיחו 0.05054563635123882
@@ -118,8 +147,6 @@ Make sure to replace `.....` with the actual path to your project directory.
   - בשביל שלא רצה 0.01771562931436165
 
     The probabilities reflect typical Hebrew grammar patterns. The highest probability (5%) for "hochihu" (proved) indicates its frequent use in argumentative or explanatory contexts.
-
----
 
 - חיים לאומיים
 
@@ -131,8 +158,6 @@ Make sure to replace `.....` with the actual path to your project directory.
 
     The strong association with adjectives like completeness (8.9% for "shlemim") and independence (6.9% for "atzma'im") highlights frequent discussions on national sovereignty and growth.
 
----
-
 - טוב מאוד
 
   - טוב מאוד טוב 0.014408221423177738
@@ -142,8 +167,6 @@ Make sure to replace `.....` with the actual path to your project directory.
   - טוב מאד ויהי 0.007617388182225383
 
     Low probabilities (0.7-1.4%) indicate high variability in usage, which is expected for this common phrase.
-
----
 
 - ידעתי שאני
 
@@ -155,8 +178,6 @@ Make sure to replace `.....` with the actual path to your project directory.
 
     Strong collocations with modal verbs (want, need, must) show typical patterns of self-reflection. The probabilities (4.7-8%) seem appropriate for personal narrative contexts.
 
----
-
 - יהודים ממוצא
 
   - יהודים ממוצא ספרדי 0.13175773669998178
@@ -166,8 +187,6 @@ Make sure to replace `.....` with the actual path to your project directory.
   - יהודים ממוצא מזרחי 0.056509920249011664
 
     High probabilities for specific ethnic origins (Sephardic 13.1%, German 11.2%) reflect historical Jewish demographics and common discourse about Jewish ethnic groups.
-
----
 
 - מכאן ניתן
 
@@ -179,8 +198,6 @@ Make sure to replace `.....` with the actual path to your project directory.
 
     Very high probability (23.1%) for "lehesik" (to conclude) shows strong grammatical patterning. The distribution across similar verbs (learn, understand, estimate) reflects typical academic or analytical discourse.
 
----
-
 - בעבר הירדן
 
   - בעבר הירדן המזרחי 0.19102590790058102
@@ -191,9 +208,9 @@ Make sure to replace `.....` with the actual path to your project directory.
 
     High probability (19.1%) for "hamizrachi" (the eastern) reflects the common historical-geographical usage. The distribution between eastern and western qualifiers matches the geographical reality.
 
----
-
 Overall, the probabilities appear to reflect natural language patterns in Hebrew, with higher probabilities for fixed phrases and technical terms, and lower probabilities for more general expressions. The system seems to capture both grammatical patterns and cultural-historical contexts effectively.
+
+---
 
 ## Implementation Notes
 
