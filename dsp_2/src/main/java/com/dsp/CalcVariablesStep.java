@@ -45,7 +45,9 @@ public class CalcVariablesStep
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			String parts[] = value.toString().split("\t");
 			String[] words = parts[0].split(" ");
-
+			if(!only_hebrew_words(words)){
+				return;
+			}
             if (words.length > 2 && parts.length > 2) {
                 String w1 = words[0];
                 String w2 = words[1];
@@ -89,6 +91,14 @@ public class CalcVariablesStep
 			}
 			localAggregation.clear();
 		}
+
+		private static Boolean only_hebrew_words(String[] trigram){
+			Boolean is_hebrew = true;
+			for(String word : trigram){
+				is_hebrew = is_hebrew & word.matches("+[א-ת]");
+			}
+			return is_hebrew;
+		}
 }
 	public static class ReducerClass extends Reducer<Text,Text,Text,Text>{
 		// private static LongWritable count = new LongWritable();
@@ -112,11 +122,9 @@ public class CalcVariablesStep
     }
 	
 	public static class PartitionerClass extends Partitioner<Text, Text> {
-		public PartitionerClass() {}
-
         @Override
         public int getPartition(Text key, Text value, int numPartitions) {
-            return key.hashCode() % numPartitions;
+            return (numPartitions == 0) ? 0 : Math.abs(key.hashCode() % numPartitions);
         }
     }
 
