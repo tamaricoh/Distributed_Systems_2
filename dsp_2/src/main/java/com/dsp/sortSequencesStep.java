@@ -90,10 +90,10 @@ public class sortSequencesStep {
     }
     }
 
-    public static class PartitionerClass extends Partitioner<CompositeKey, Text> {
+	public static class PartitionerClass extends Partitioner<CompositeKey, Text> {
         @Override
         public int getPartition(CompositeKey key, Text value, int numPartitions) {
-            return (key.getW1().hashCode() & Integer.MAX_VALUE) % numPartitions;
+            return (numPartitions == 0) ? 0 : Math.abs(key.getW1().concat(key.getW2()).hashCode() % numPartitions);
         }
     }
 

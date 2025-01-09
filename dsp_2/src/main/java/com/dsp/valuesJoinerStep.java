@@ -93,10 +93,10 @@ public class valuesJoinerStep {
         }
     }
 
-    public class PartitionerClass extends Partitioner<Text, Text> {
+    public static class PartitionerClass extends Partitioner<Text, Text> {
         @Override
         public int getPartition(Text key, Text value, int numPartitions) {
-            return key.hashCode() % numPartitions;
+            return (numPartitions == 0) ? 0 : Math.abs(key.hashCode() % numPartitions);
         }
     }
 
